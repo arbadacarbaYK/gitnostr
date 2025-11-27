@@ -1,4 +1,7 @@
-# gitnostr by @spearson78
+# gitnostr bridge (gittr.space fork)
+
+This fork keeps the original gitnostr bridge architecture intact and layers in the optional enhancements we rely on at gittr.space (HTTP fast lane, watch-all mode, dedupe cache, etc.). Every addition is gated so operators can run the classic bridge or enable the extra features as needed.
+
 
 A proof of concept integration of git and nostr providing
 
@@ -58,6 +61,7 @@ deduplication cache, and a "watch-all" mode) that we rely on in production. See
 [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the annotated diagram and upstream
 plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
 and [`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
+These docs use the 🆕 badge to highlight fork-only improvements so upstream reviewers know what still needs a PR.
 
 
 # Setup Instructions
@@ -79,10 +83,10 @@ sudo useradd --create-home git-nostr
 sudo su - git-nostr
 ```
 
-Clone the gitnostr repository and build the bridge components
+Clone the gitnostr repository and build the bridge components. While these enhancements are still under review, clone the gittr.space fork; once merged upstream you can use the original repo again.
 
 ```bash
-git clone https://github.com/spearson78/gitnostr
+git clone https://github.com/arbadacarbaYK/gitnostr
 cd gitnostr
 make git-nostr-bridge
 ```
