@@ -34,22 +34,3 @@ Blue boxes in the diagram highlight the pieces that do not exist in the upstream
 See [`docs/STANDALONE_BRIDGE_SETUP.md`](STANDALONE_BRIDGE_SETUP.md) for a full
 configuration reference when deploying the bridge without the gittr UI.
 
-## Proposed upstream plan
-
-1. **Keep the HTTP server optional**
-   - Default: start it only when `BRIDGE_HTTP_PORT` (or `cfg.ListenAddr`) is set.
-   - Provide docs describing how to front it with nginx / auth if desired.
-2. **Document direct event flow**
-   - Update upstream README with the same diagram and bullet list above.
-   - Emphasize that relays remain the source of truth; the HTTP path is just a fast lane.
-3. **Submit changes as a focused PR**
-   - Touch only `cmd/git-nostr-bridge/main.go` + docs to minimize review scope.
-   - Reference this document in the PR body for reviewers.
-
-## Notes for gittr operators
-
-- Our production `docs/GIT_NOSTR_BRIDGE_SETUP.md`, `PUSH_VERIFICATION_SUMMARY.md`, and related guides
-  already assume these features exist; link to this page when we file the upstream PR so the context
-  is obvious.
-- When we generate release artifacts, include both the `.dot` source and the PNG so other contributors
-  can tweak the visuals without proprietary tooling.

@@ -29,7 +29,7 @@ clients can reproduce the same behavior.
 4. If still missing, UI falls back to GitHub/GitLab/Codeberg APIs using the normalized `source` URLs.
 5. File open actions follow the same order: cache → embedded content → 🆕 multi-source fetch (bridge + external) → Nostr fallback → git servers.
 
-This is described in detail in gittr’s `docs/FILE_FETCHING_INSIGHTS.md`, but the bridge only needs to
+This is described in detail in gittr’s [`docs/FILE_FETCHING_INSIGHTS.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?path=docs&file=docs%2FFILE_FETCHING_INSIGHTS.md), but the bridge only needs to
 provide step 2/3 above.
 
 ## 3. What’s “new” in this fork
