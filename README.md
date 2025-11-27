@@ -56,8 +56,8 @@ git-nostr-bridge will then react to these events and update the DB and create an
 This fork carries additional bridge capabilities (HTTP fast-lane, merged relay/HTTP queue,
 deduplication cache, and a "watch-all" mode) that we rely on in production. See
 [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the annotated diagram and upstream
-plan, and [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete
-configuration reference when running the bridge outside the gittr UI.
+plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
+and [`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
 
 
 # Setup Instructions
