@@ -16,6 +16,10 @@ clients can reproduce the same behavior.
 - **Clone trigger**: if the repo is missing, gittr asks `.../api/nostr/repo/clone` and the bridge pulls
   it from the `clone`/`source` tags in the NIP-34 event, then broadcasts a `grasp-repo-cloned` SSE for
   auto-refresh.
+- **Blossom clones**: any HTTPS clone URL (including `https://blossom...`) is treated like a normal
+  Git remote; the bridge just runs `git clone` against it (no extra APIs).
+- **Blossom URLs**: any HTTPS clone URL (including `https://blossom...`) is treated like a normal
+  Git remote; the bridge doesn’t need Blossom-specific APIs.
 
 ## 2. UI flow recap (gittr)
 

@@ -60,8 +60,18 @@ This fork carries additional bridge capabilities (HTTP fast-lane, merged relay/H
 deduplication cache, and a "watch-all" mode) that we rely on in production. See
 [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the annotated diagram and upstream
 plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
-and [`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
+[`docs/FILE_FETCHING_INSIGHTS.md`](docs/FILE_FETCHING_INSIGHTS.md) for the detailed flow rationale, and
+[`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
 These docs use the 🆕 badge to highlight fork-only improvements so upstream reviewers know what still needs a PR.
+
+### Supported NIPs & Kinds
+
+- **Kind 50** – repository permissions (original gitnostr protocol)
+- **Kind 51** – repository metadata (original gitnostr protocol)
+- **Kind 52** – SSH keys
+- **Kind 30617 (NIP-34)** – replaceable repository announcements (primary source)
+- **Kind 9803 / 9804** – gittr extensions for issues and pull requests (optional)
+- **NIPs**: NIP-01 (base protocol), NIP-34 (repositories), NIP-96 (Blossom URLs in `clone` tags), NIP-57 (zaps routed through the UI)
 
 
 # Setup Instructions
