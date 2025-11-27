@@ -1,4 +1,4 @@
-# gitnostr bridge (gittr.space fork)
+# gitnostr bridge 
 
 This fork keeps the original gitnostr bridge architecture intact and layers in the optional enhancements we rely on at gittr.space (HTTP fast lane, watch-all mode, dedupe cache, etc.). Every addition is gated so operators can run the classic bridge or enable the extra features as needed.
 
