@@ -1,4 +1,4 @@
-# Nostr Git
+# gitnostr by @spearson78
 
 A proof of concept integration of git and nostr providing
 
@@ -50,6 +50,14 @@ Will enable fine grain branch control e.g. prevent pushing to specific branches 
 Command line tool with similar options to the github cli that will publish the relevant events using your private key to the configured relays
 
 git-nostr-bridge will then react to these events and update the DB and create any git repos needed.
+
+## gittr.space enhancements
+
+This fork carries additional bridge capabilities (HTTP fast-lane, merged relay/HTTP queue,
+deduplication cache, and a "watch-all" mode) that we rely on in production. See
+[`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the annotated diagram and upstream
+plan, and [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete
+configuration reference when running the bridge outside the gittr UI.
 
 
 # Setup Instructions
@@ -184,5 +192,5 @@ Create a test repository and clone it. replace <publickey> with the hex represen
 You can set write permission for your repository with the following command. replace <publickey> with the hex represenation of your public key. If you are using a nip05 capable public key you can use the nip05 identifier instead.
 
 ```bash
-./bin/gn repo permissions test <publickey> WRITE
+./bin/gn repo permission test <publickey> WRITE
 ```
