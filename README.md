@@ -66,9 +66,27 @@ git-nostr-bridge will then react to these events and update the DB and create an
 ## gittr.space enhancements
 
 This fork carries additional bridge capabilities (HTTP fast-lane, merged relay/HTTP queue,
-deduplication cache, and a "watch-all" mode) that we rely on in production. See
-[`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the annotated diagram and upstream
-plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
+deduplication cache, and a "watch-all" mode) that we rely on in production. 
+
+### Platform-Wide Enhancements Overview
+
+![Comprehensive gittr.space platform enhancements](./docs/gittr-platform-enhancements.png)
+
+This diagram shows **all enhancements** added to the gittr.space platform across the entire stack:
+
+- **🔵 Bridge Enhancements**: HTTP API, direct event channel, deduplication, watch-all mode, structured logging
+- **🟣 Frontend/UI**: Multiple themes, explore page, user profiles, fuzzy finder, code search
+- **🟢 File Fetching System**: Multi-source parallel fetching, prioritization, caching, URL normalization, README image handling
+- **🟠 GRASP Protocol**: Server detection, clone/relays tags, proactive sync, NIP-96 Blossom support
+- **🔴 Collaboration**: Issues with bounties, pull requests, projects (Kanban), discussions, contributor tracking
+- **🟡 Payments**: Zap repositories, issue bounties, zap distribution, payment settings, bounty hunt page
+- **🔵 Notifications**: Nostr DM, Telegram DM, Telegram channel announcements
+- **🔵 NIP Extensions**: NIP-25 (stars), NIP-51 (following), NIP-46 (remote signer), NIP-57 (zaps), NIP-96 (Blossom)
+- **🟤 Storage**: Browser localStorage, metadata caching, optimized repository storage
+
+### Detailed Documentation
+
+See [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the **bridge-specific** annotated diagram and upstream plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
 [`docs/FILE_FETCHING_INSIGHTS.md`](docs/FILE_FETCHING_INSIGHTS.md) for the detailed flow rationale, and
 [`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
 These docs use the 🆕 badge to highlight fork-only improvements so upstream reviewers know what still needs a PR.
