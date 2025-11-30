@@ -1,4 +1,4 @@
-# gitnostr bridge 
+# gitnostr bridge (gittr.space fork)
 
 This fork keeps the original gitnostr bridge architecture intact and layers in the optional enhancements we rely on at gittr.space (HTTP fast lane, watch-all mode, dedupe cache, etc.). Every addition is gated so operators can run the classic bridge or enable the extra features as needed.
 
@@ -86,9 +86,10 @@ This diagram shows **all enhancements** added to the gittr.space platform across
 
 ### Detailed Documentation
 
-See [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the **bridge-specific** annotated diagram and upstream plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference,
-[`docs/FILE_FETCHING_INSIGHTS.md`](docs/FILE_FETCHING_INSIGHTS.md) for the detailed flow rationale, and
+See [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the **bridge-specific** annotated diagram and upstream plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference, and
 [`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
+
+> **Note:** For detailed file fetching insights and best practices, see [`FILE_FETCHING_INSIGHTS.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/FILE_FETCHING_INSIGHTS.md) in the main gittr repository.
 These docs use the 🆕 badge to highlight fork-only improvements so upstream reviewers know what still needs a PR.
 
 
