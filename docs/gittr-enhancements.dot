@@ -43,17 +43,18 @@ digraph G {
   cli -> ssh [style=dashed, label="Git over SSH"];
 
   http_api [label="HTTP API\n(/api/event)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
-  direct_chan [label="directEvents queue\n(merge with relays)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
-  dedupe [label="Seen cache +\ndeduplication", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
+  direct_chan [label="directEvents queue\n(HTTP events)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
+  merged_chan [label="mergedEvents channel\n(HTTP + relay events)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
+  dedupe [label="Seen cache +\ndeduplication\n(seenEventIDs)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
   watchall [label="Watch-all mode\n(empty gitRepoOwners)", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
-  logging [label="Structured logging", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
+  logging [label="Structured logging\n([Bridge], [Bridge API])", shape=box, style="filled", fillcolor="#d0f0ff", color="#0288d1"];
 
   bridge -> http_api [style=dotted, dir=back, label="New\nentry point"];
   http_api -> direct_chan [label="POST event"];
-  relay -> direct_chan [label="Relay events"];
-  direct_chan -> bridge [label="merged stream"];
-  direct_chan -> dedupe [style=dashed];
-  dedupe -> bridge [style=dashed];
+  relay -> merged_chan [label="Relay events"];
+  direct_chan -> merged_chan [label="HTTP events"];
+  merged_chan -> dedupe [style=dashed];
+  dedupe -> bridge [label="merged stream"];
   watchall -> bridge [style=dashed];
   logging -> bridge [style=dashed];
 
