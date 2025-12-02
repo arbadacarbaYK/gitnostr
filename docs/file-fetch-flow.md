@@ -36,8 +36,7 @@ provide step 2/3 above.
 
 - **HTTP fast lane** (`BRIDGE_HTTP_PORT`): lets the UI POST a signed NIP-34 event straight to the
   bridge so the repo is mirrored immediately instead of waiting for relay propagation.
-- **Deduplication channel**: ensures the same event coming from both HTTP and relays doesn’t clone
-  twice.
+- **Deduplication channel** (`mergedEvents` + `seenEventIDs` cache): merges HTTP and relay events into a single stream, then uses a seen-event cache to ensure the same event doesn't clone twice.
 - **Watch-all mode**: leaving `gitRepoOwners` empty mirrors *every* repo, which is how gittr builds
   the public “Browse” list.
 
