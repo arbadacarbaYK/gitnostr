@@ -60,6 +60,7 @@ git-nostr-bridge will then react to these events and update the DB and create an
 - **Kind 51** – repository metadata (original gitnostr protocol)
 - **Kind 52** – SSH keys
 - **Kind 30617 (NIP-34)** – replaceable repository announcements (primary source)
+- **Kind 30618 (NIP-34)** – repository state announcements (required for ngit clients like gitworkshop.dev)
 - 🆕 **Kind 9803 / 9804** – gittr extensions for issues and pull requests (optional)
 - **NIPs**: NIP-01 (base protocol), NIP-34 (repositories), 🆕 NIP-96 (Blossom URLs in `clone` tags), 🆕 NIP-57 (zaps routed through the UI)
 
