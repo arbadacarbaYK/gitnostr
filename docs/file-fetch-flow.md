@@ -29,8 +29,18 @@ clients can reproduce the same behavior.
 4. If still missing, UI falls back to GitHub/GitLab/Codeberg APIs using the normalized `source` URLs.
 5. File open actions follow the same order: cache → embedded content → 🆕 multi-source fetch (bridge + external) → Nostr fallback → git servers.
 
-This is described in detail in gittr’s [`docs/FILE_FETCHING_INSIGHTS.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?path=docs&file=docs%2FFILE_FETCHING_INSIGHTS.md), but the bridge only needs to
+This is described in detail in gittr's [`docs/FILE_FETCHING_INSIGHTS.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?path=docs&file=docs%2FFILE_FETCHING_INSIGHTS.md), but the bridge only needs to
 provide step 2/3 above.
+
+### Push to Nostr Process
+
+When pushing a repository to Nostr, the file content source follows this order:
+
+1. **localStorage** (primary) - Files should already be present from create/import workflow
+2. **Bridge API** (fallback) - If files are missing from `localStorage`, fetch from `/api/nostr/repo/file-content`
+3. **Exclusion** - Files without content are excluded with warnings
+
+**Important**: The push process does NOT fetch files from external sources (GitHub, GitLab, etc.) during push. Files must already be available in `localStorage` or on the bridge. If files are missing, users should re-import the repository.
 
 ## 3. What’s “new” in this fork
 
