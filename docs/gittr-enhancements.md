@@ -31,6 +31,6 @@ Blue boxes in the diagram highlight the pieces that do not exist in the upstream
   clone/source tags the event provides (GitHub, GitLab, Codeberg, GRASP, etc.); HTTPS URLs are
   preferred, and git@/git:// schemes get normalized automatically.
 
-See [`docs/STANDALONE_BRIDGE_SETUP.md`](STANDALONE_BRIDGE_SETUP.md) for a full
+See [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a full
 configuration reference when deploying the bridge without the gittr UI.
 
