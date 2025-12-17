@@ -27,6 +27,7 @@ clients can reproduce the same behavior.
 2. UI tries cached data → embedded NIP-34 files → bridge tree API.
 3. 🆕 If the bridge returns 404, gittr triggers `repo/clone`, waits ~3 seconds, retries tree API (and consumes the `grasp-repo-cloned` SSE).
 4. If still missing, UI falls back to GitHub/GitLab/Codeberg APIs using the normalized `source` URLs.
+   - **GitLab pagination**: GitLab API returns max 100 items per page - gittr implements pagination to fetch ALL files (critical for repos with >100 files)
 5. File open actions follow the same order: cache → embedded content → 🆕 multi-source fetch (bridge + external) → Nostr fallback → git servers.
 
 This is described in detail in gittr's [`docs/FILE_FETCHING_INSIGHTS.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/FILE_FETCHING_INSIGHTS.md), but the bridge only needs to
