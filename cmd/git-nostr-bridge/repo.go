@@ -89,12 +89,6 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		return fmt.Errorf("invalid repository name: %v", repoName)
 	}
 
-	// CRITICAL: Check if repo is corrupted before storing anywhere
-	if bridge.IsCorruptedRepo(event.ID, repoName, event.PubKey) {
-		log.Printf("❌ [Bridge] Rejecting corrupted repository: event=%s pubkey=%s repo=%s\n", event.ID, event.PubKey, repoName)
-		return fmt.Errorf("corrupted repository rejected: event=%s", event.ID)
-	}
-
 	reposDir, err := gitnostr.ResolvePath(cfg.RepositoryDir)
 	if err != nil {
 		return fmt.Errorf("resolve repos path : %w", err)
