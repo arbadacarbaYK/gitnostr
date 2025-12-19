@@ -43,6 +43,8 @@ When pushing a repository to Nostr, the file content source follows this order:
 
 **Important**: The push process does NOT fetch files from external sources (GitHub, GitLab, etc.) during push. Files must already be available in `localStorage` or on the bridge. If files are missing, users should re-import the repository.
 
+**Empty Commit File Preservation**: When pushing with no file changes (e.g., to update commit date after refetch), the push API (`/api/nostr/repo/push`) automatically preserves existing files from the repo. This ensures that date-update commits maintain the file tree, allowing clients like `gitworkshop.dev` to display files correctly. The commit is still created with `--allow-empty` to ensure a new commit is always created with the current timestamp.
+
 ## 3. What’s “new” in this fork
 
 - **HTTP fast lane** (`BRIDGE_HTTP_PORT`): lets the UI POST a signed NIP-34 event straight to the
