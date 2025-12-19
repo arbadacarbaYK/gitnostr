@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/nbd-wtf/go-nostr"
-	"github.com/spearson78/gitnostr"
-	"github.com/spearson78/gitnostr/bridge"
-	"github.com/spearson78/gitnostr/protocol"
+	"github.com/arbadacarbaYK/gitnostr"
+	"github.com/arbadacarbaYK/gitnostr/bridge"
+	"github.com/arbadacarbaYK/gitnostr/protocol"
 )
 
 // min returns the minimum of two integers
@@ -175,6 +175,28 @@ func processEvent(event nostr.Event, db *sql.DB, cfg bridge.Config, sshKeyPubKey
 			return false
 		}
 		return false
+
+	case protocol.KindRepositoryState:
+		log.Printf("📊 [Bridge] Processing repository state event: kind=%d id=%s, pubkey=%s\n", event.Kind, event.ID, event.PubKey)
+		err := handleRepositoryStateEvent(event, db, cfg)
+		if err != nil {
+			// Check if repository doesn't exist yet - don't mark as processed so it can be reprocessed
+			if err == ErrRepositoryNotExists {
+				log.Printf("⏳ [Bridge] State event deferred (repository not created yet): id=%s\n", event.ID)
+				log.Printf("💡 [Bridge] Event will be reprocessed when repository is created\n")
+				return false // Don't reconnect, but don't update Since either
+			}
+			log.Printf("❌ [Bridge] Failed to handle repository state event: %v\n", err)
+			return false
+		}
+		log.Printf("✅ [Bridge] Successfully processed repository state event: id=%s\n", event.ID)
+
+		err = updateSince(protocol.KindRepositoryState, event.CreatedAt.Unix(), db)
+		if err != nil {
+			log.Printf("❌ [Bridge] Failed to update Since: %v\n", err)
+			return false
+		}
+		return false // Don't need to reconnect
 
 	case protocol.KindRepositoryPermission:
 		err := handleRepositorPermission(event, db, cfg)
