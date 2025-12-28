@@ -19,31 +19,36 @@ import (
 func repoCreate(cfg Config, pool *nostr.RelayPool) {
 	flags := flag.NewFlagSet("repo create", flag.ContinueOnError)
 
-	publicRead := flags.Bool("public-read", true, "repository will be readable by all users")
-	publicWrite := flags.Bool("public-write", false, "repository will be writeable by all users")
-
 	flags.Parse(os.Args[3:])
 
 	repoName := flags.Args()[0]
 
-	log.Println("repo create --public-read=", *publicRead, " --public-write=", *publicWrite, " ", repoName)
+	log.Println("repo create ", repoName)
 
-	repoJson, err := json.Marshal(protocol.Repository{
-		RepositoryName: repoName,
-		PublicRead:     *publicRead,
-		PublicWrite:    *publicWrite,
-		GitSshBase:     cfg.GitSshBase,
-	})
-	if err != nil {
-		log.Fatal("repo marshal :", err)
+	// NIP-34: Use kind 30617 with tags, content MUST be empty per spec
+	// NOTE: Privacy is NOT encoded in NIP-34 events (per spec)
+	// Privacy is enforced via the "maintainers" tag (NIP-34 spec) and bridge access control
+	var tags nostr.Tags
+	// Required "d" tag for NIP-34 replaceable events
+	tags = append(tags, nostr.Tag{"d", repoName})
+	
+	// Optional: Add clone tag if GitSshBase is configured
+	if cfg.GitSshBase != "" {
+		// Convert git@host:path format to https:// if needed, or use as-is
+		cloneUrl := cfg.GitSshBase
+		if strings.HasPrefix(cloneUrl, "git@") {
+			// Keep SSH format for clone tag (clients can normalize)
+			tags = append(tags, nostr.Tag{"clone", cloneUrl})
+		} else {
+			tags = append(tags, nostr.Tag{"clone", cloneUrl})
+		}
 	}
 
-	var tags nostr.Tags
 	_, statuses, err := pool.PublishEvent(&nostr.Event{
 		CreatedAt: time.Now(),
-		Kind:      protocol.KindRepository,
+		Kind:      protocol.KindRepositoryNIP34, // NIP-34: Use kind 30617
 		Tags:      tags,
-		Content:   string(repoJson),
+		Content:   "", // NIP-34: Content MUST be empty - all metadata in tags
 	})
 	if err != nil {
 		log.Fatal(err)
@@ -152,7 +157,8 @@ func repoClone(cfg Config, pool *nostr.RelayPool) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	_, subchan := pool.Sub(nostr.Filters{{Kinds: []int{protocol.KindRepository}, Authors: []string{identifier}}})
+	// Query for both legacy (kind 51) and NIP-34 (kind 30617) events
+	_, subchan := pool.Sub(nostr.Filters{{Kinds: []int{protocol.KindRepository, protocol.KindRepositoryNIP34}, Authors: []string{identifier}}})
 
 	var pubKey string
 	var repository protocol.Repository
@@ -176,16 +182,53 @@ func repoClone(cfg Config, pool *nostr.RelayPool) {
 
 			return
 		case event := <-subchan:
-			var checkRepo protocol.Repository
-
-			err := json.Unmarshal([]byte(event.Event.Content), &checkRepo)
-			if err != nil {
-				log.Println("Failed to parse repository.")
-			}
-
-			if checkRepo.RepositoryName == repoName {
-				repository = checkRepo
-				pubKey = event.Event.PubKey
+			// Handle NIP-34 events (kind 30617) - data is in tags, not content
+			if event.Event.Kind == protocol.KindRepositoryNIP34 {
+				// Extract repository name from "d" tag
+				var foundRepoName string
+				for _, tag := range event.Event.Tags {
+					if len(tag) >= 2 && tag[0] == "d" {
+						foundRepoName = tag[1]
+						break
+					}
+				}
+				if foundRepoName == repoName {
+					// Try to parse legacy JSON from content for GitSshBase
+					var checkRepo protocol.Repository
+					if event.Event.Content != "" {
+						err := json.Unmarshal([]byte(event.Event.Content), &checkRepo)
+						if err == nil {
+							checkRepo.RepositoryName = foundRepoName
+							repository = checkRepo
+						} else {
+							// Create minimal repo from tags
+							repository = protocol.Repository{
+								RepositoryName: foundRepoName,
+								PublicRead:     true,  // Default for NIP-34
+								PublicWrite:    false, // Default for NIP-34
+							}
+						}
+					} else {
+						repository = protocol.Repository{
+							RepositoryName: foundRepoName,
+							PublicRead:     true,
+							PublicWrite:    false,
+						}
+					}
+					pubKey = event.Event.PubKey
+				}
+			} else {
+				// Legacy kind 51 - parse from JSON content
+				var checkRepo protocol.Repository
+				err := json.Unmarshal([]byte(event.Event.Content), &checkRepo)
+				if err != nil {
+					log.Println("Failed to parse repository.")
+					continue
+				}
+				if checkRepo.RepositoryName == repoName {
+					repository = checkRepo
+					pubKey = event.Event.PubKey
+				}
 			}
 		}
 	}

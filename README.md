@@ -77,7 +77,7 @@ This diagram shows **all enhancements** added to the gittr.space platform across
 
 - **🔵 Bridge Enhancements**: HTTP API, direct event channel, deduplication, watch-all mode, structured logging
 - **🟣 Frontend/UI**: Multiple themes, explore page, user profiles, fuzzy finder, code search
-- **🟢 File Fetching System**: Multi-source parallel fetching, prioritization, caching, URL normalization, README image handling
+- **🟢 File Fetching System**: Multi-source parallel fetching, prioritization, caching, URL normalization, README image handling, GitHub OAuth token support for private repositories
 - **🟠 GRASP Protocol**: Server detection, clone/relays tags, proactive sync, NIP-96 Blossom support
 - **🔴 Collaboration**: Issues with bounties, pull requests, projects (Kanban), discussions, contributor tracking
 - **🟡 Payments**: Zap repositories, issue bounties, zap distribution, payment settings, bounty hunt page
@@ -222,6 +222,13 @@ Create a test repository and clone it. replace <publickey> with the hex represen
 ./bin/gn repo create test
 ./bin/gn repo clone  <publickey>:test
 ```
+
+**Note:** The CLI now uses **NIP-34 (kind 30617)** for repository announcements. The `repo create` command publishes events with:
+- Required `d` tag containing the repository name
+- Optional `clone` tags if `gitSshBase` is configured
+- Legacy JSON in content for backward compatibility with older bridges
+
+The `repo clone` command queries both legacy (kind 51) and NIP-34 (kind 30617) events for maximum compatibility.
 
 You can set write permission for your repository with the following command. replace <publickey> with the hex represenation of your public key. If you are using a nip05 capable public key you can use the nip05 identifier instead.
 

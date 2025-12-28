@@ -17,6 +17,13 @@ so that any Nostr-aware Git frontend can use it.
 | --- | --- | --- | --- |
 | `BRIDGE_HTTP_PORT` | optional | `8080` | Enables the fast-lane HTTP API (`/api/event`). Leave unset to disable and rely on relays only. |
 | `SSH_ORIGINAL_COMMAND` | set automatically by sshd | n/a | Used only by `git-nostr-ssh` when invoked via ssh. You never set this manually. |
+| `GITHUB_PLATFORM_TOKEN` | optional | n/a | GitHub personal access token with `public_repo` scope for fetching public repository files. Used by frontend clients that call the bridge's file-content API. |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | optional | n/a | GitHub OAuth credentials for user authentication. Required if frontend clients need to access private repositories. Users authenticate via OAuth and their tokens are stored in browser localStorage, then passed to the bridge API. |
+
+**Note on GitHub tokens:**
+- `GITHUB_PLATFORM_TOKEN`: Used by the bridge for public repo access (rate limits, better reliability)
+- User OAuth tokens: Stored in browser localStorage after OAuth flow, passed as `githubToken` query parameter to `/api/git/file-content` endpoint
+- The bridge prioritizes user tokens (for private repos) over platform tokens (for public repos)
 
 No other environment variables are needed for the bridge. All behavior is controlled through the JSON
 config described below.
