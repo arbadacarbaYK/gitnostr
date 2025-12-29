@@ -13,6 +13,8 @@ clients can reproduce the same behavior.
   a flat file list (used for directory views).
 - **File content API**: GET `.../api/nostr/repo/file-content?repo=<pk>/<name>&path=<file>&branch=<ref>`
   streams blob contents.
+  - **CRITICAL**: File paths in the `path` parameter must be URL-encoded using `encodeURIComponent()` to handle non-ASCII characters (Cyrillic, Chinese, accented characters, etc.). The API automatically decodes them and handles UTF-8 correctly.
+  - Example: `path=${encodeURIComponent('ЧИТАЙ.md')}` or `path=${encodeURIComponent('读我D.md')}`
 - **Clone trigger**: if the repo is missing, gittr asks `.../api/nostr/repo/clone` and the bridge pulls
   it from the `clone`/`source` tags in the NIP-34 event, then broadcasts a `grasp-repo-cloned` SSE for
   auto-refresh.
