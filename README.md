@@ -57,12 +57,21 @@ git-nostr-bridge will then react to these events and update the DB and create an
 ## Supported NIPs & Kinds
 
 - **Kind 50** – repository permissions (original gitnostr protocol)
-- **Kind 51** – repository metadata (original gitnostr protocol)
+- **Kind 51** – repository metadata (original gitnostr protocol, legacy, read-only)
 - **Kind 52** – SSH keys
+- **Kind 1111 (NIP-22)** – comments (issue/PR/patch comments)
+- **Kind 1337 (NIP-C0)** – code snippets
+- **Kind 1617 (NIP-34)** – patches (patch-based code contributions)
+- **Kind 1618 (NIP-34)** – pull requests
+- **Kind 1619 (NIP-34)** – pull request updates
+- **Kind 1621 (NIP-34)** – issues
+- **Kind 1630-1633 (NIP-34)** – status events (Open/Applied/Closed/Draft)
+- **Kind 10317 (NIP-34)** – user GRASP list (preferred GRASP servers)
 - **Kind 30617 (NIP-34)** – replaceable repository announcements (primary source)
 - **Kind 30618 (NIP-34)** – repository state announcements (required for ngit clients like gitworkshop.dev)
-- 🆕 **Kind 9803 / 9804** – gittr extensions for issues and pull requests (optional)
-- **NIPs**: NIP-01 (base protocol), NIP-34 (repositories), 🆕 NIP-96 (Blossom URLs in `clone` tags), 🆕 NIP-57 (zaps routed through the UI)
+- **Kind 9735 (NIP-57)** – zaps (Lightning payments)
+- **Kind 9806** – bounties (custom extension)
+- **NIPs**: NIP-01 (base protocol), NIP-11 (relay info), NIP-19 (bech32), NIP-22 (comments), NIP-25 (reactions), NIP-33/34 (repositories), NIP-46 (remote signer), NIP-57 (zaps), NIP-96 (Blossom URLs in `clone` tags), NIP-C0 (code snippets)
 
 ## gittr.space enhancements
 
