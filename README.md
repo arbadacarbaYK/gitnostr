@@ -41,6 +41,7 @@ Connects to a set of relays and:
 
 Configured as the command for a nostr users ssh-key in the authorized_keys file.
 Whenever a user tries to perform a git operation (push/pull) git-nostr-ssh will perform an access control check.
+Repository owners are always treated as `ADMIN` for their own repositories, even if cached permission rows are missing/stale.
 
 ### git-nostr-hook
 
