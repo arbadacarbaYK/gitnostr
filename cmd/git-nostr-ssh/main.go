@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/arbadacarbaYK/gitnostr"
 	"github.com/arbadacarbaYK/gitnostr/bridge"
@@ -24,6 +25,15 @@ func isWriteAllowed(rights *string) bool {
 
 func isAdminAllowed(rights *string) bool {
 	return rights != nil && (*rights == "ADMIN")
+}
+
+func getLatestPendingPushInvoice(db *sql.DB, ownerPubKey, repoName, payerPubKey string) (string, error) {
+	row := db.QueryRow("SELECT Invoice FROM RepositoryPushPaymentIntent WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=? AND Status='pending' ORDER BY CreatedAt DESC LIMIT 1", ownerPubKey, repoName, payerPubKey)
+	var invoice string
+	if err := row.Scan(&invoice); err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(invoice), nil
 }
 
 func main() {
@@ -132,6 +142,8 @@ func main() {
 
 	row = db.QueryRow("SELECT PublicRead,PublicWrite FROM RepositoryPermission WHERE OwnerPubKey=? AND RepositoryName=? AND TargetPubKey=?", ownerPubKey, repoName, targetPubKey)
 
+	var consumePaywallGrant bool
+
 	switch verb {
 	case "git-upload-pack":
 		if !publicRead && !isReadAllowed(permission) {
@@ -147,6 +159,50 @@ func main() {
 			fmt.Fprintf(os.Stderr, "hint: Only repository owners and users with WRITE or ADMIN permissions can push.\n")
 			fmt.Fprintf(os.Stderr, "hint: Contact the repository owner to request write access.\n")
 			os.Exit(1)
+		}
+		// Optional push paywall: if repo has a push cost, the caller must have an unexpired paid grant.
+		var pushCostSats int
+		costRow := db.QueryRow("SELECT PushCostSats FROM RepositoryPushPolicy WHERE OwnerPubKey=? AND RepositoryName=?", ownerPubKey, repoName)
+		costErr := costRow.Scan(&pushCostSats)
+		if costErr != nil && !errors.Is(costErr, sql.ErrNoRows) {
+			// Graceful fallback for deployments without paywall tables.
+			if !strings.Contains(strings.ToLower(costErr.Error()), "no such table") {
+				fmt.Fprintf(os.Stderr, "fatal: failed to check push policy: %v\n", costErr)
+				os.Exit(1)
+			}
+			pushCostSats = 0
+		}
+		if pushCostSats > 0 {
+			var paidUntil int64
+			paymentRow := db.QueryRow("SELECT PaidUntil FROM RepositoryPushPayment WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=?", ownerPubKey, repoName, targetPubKey)
+			payErr := paymentRow.Scan(&paidUntil)
+			if payErr != nil {
+				if errors.Is(payErr, sql.ErrNoRows) || strings.Contains(strings.ToLower(payErr.Error()), "no such table") {
+					fmt.Fprintf(os.Stderr, "fatal: push payment required for '%s/%s' (%d sats)\n", ownerPubKey, repoName, pushCostSats)
+					if invoice, invErr := getLatestPendingPushInvoice(db, ownerPubKey, repoName, targetPubKey); invErr == nil && invoice != "" {
+						fmt.Fprintf(os.Stderr, "hint: pending invoice (BOLT11): %s\n", invoice)
+						fmt.Fprintf(os.Stderr, "hint: this invoice is tied to your SSH/Nostr pubkey and this repository only.\n")
+						fmt.Fprintf(os.Stderr, "hint: pay the invoice, then retry git push.\n")
+					} else {
+						fmt.Fprintf(os.Stderr, "hint: Open the repository in the web UI, click Push to Nostr once to get a payable invoice (owner wallet via LNbits or Blink), pay it, then retry git push.\n")
+					}
+					os.Exit(1)
+				}
+				fmt.Fprintf(os.Stderr, "fatal: failed to check push payment status: %v\n", payErr)
+				os.Exit(1)
+			}
+			if time.Now().Unix() > paidUntil {
+				fmt.Fprintf(os.Stderr, "fatal: push payment authorization expired for '%s/%s'\n", ownerPubKey, repoName)
+				if invoice, invErr := getLatestPendingPushInvoice(db, ownerPubKey, repoName, targetPubKey); invErr == nil && invoice != "" {
+					fmt.Fprintf(os.Stderr, "hint: pending invoice (BOLT11): %s\n", invoice)
+					fmt.Fprintf(os.Stderr, "hint: this invoice is tied to your SSH/Nostr pubkey and this repository only.\n")
+					fmt.Fprintf(os.Stderr, "hint: pay the invoice, then retry git push.\n")
+				} else {
+					fmt.Fprintf(os.Stderr, "hint: Complete a new push authorization payment (%d sats) in the web UI (owner wallet via LNbits or Blink), then retry git push.\n", pushCostSats)
+				}
+				os.Exit(1)
+			}
+			consumePaywallGrant = true
 		}
 	default:
 		if !isAdminAllowed(permission) {
@@ -168,6 +224,17 @@ func main() {
 			os.Exit(e.ExitCode())
 		} else {
 			os.Exit(1)
+		}
+	}
+
+	if consumePaywallGrant {
+		consumeResult, consumeErr := db.Exec("DELETE FROM RepositoryPushPayment WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=? AND PaidUntil>=?", ownerPubKey, repoName, targetPubKey, time.Now().Unix())
+		if consumeErr != nil {
+			fmt.Fprintf(os.Stderr, "warning: push succeeded but failed to finalize paywall grant: %v\n", consumeErr)
+			return
+		}
+		if rowsAffected, rowsErr := consumeResult.RowsAffected(); rowsErr != nil || rowsAffected == 0 {
+			fmt.Fprintf(os.Stderr, "warning: push succeeded but paywall grant was not consumed (already cleared?)\n")
 		}
 	}
 }
