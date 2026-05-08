@@ -1,8 +1,8 @@
 # gittr.space Bridge Enhancements
 
-This repo captures the gittr.space-specific improvements we plan to upstream to @spearson78's
-[`gitnostr`](https://github.com/spearson78/gitnostr) project. The goal is to keep the
-interface identical while contributing the battle-tested additions we rely on in production.
+**Canonical repo:** [`github.com/arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (gittr.space–maintained fork).  
+This document tracks improvements layered on the original proof-of-concept; we still aim to contribute them back to [@spearson78’s upstream `gitnostr`](https://github.com/spearson78/gitnostr). The goal is to keep the
+interface identical while shipping the battle-tested additions we rely on in production.
 
 ![Diagram of enhancements](./gittr-enhancements.png)
 

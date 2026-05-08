@@ -123,10 +123,10 @@ sudo useradd --create-home git-nostr
 sudo su - git-nostr
 ```
 
-Clone the gitnostr repository and build the bridge components. While these enhancements are still under review, clone the gittr.space fork; once merged upstream you can use the original repo again.
+Clone **this** repository (canonical for gittr.space; [upstream history](https://github.com/spearson78/gitnostr)) and build the bridge components.
 
 ```bash
-git clone https://github.com/arbadacarbaYK/gitnostr
+git clone https://github.com/arbadacarbaYK/gitnostr.git
 cd gitnostr
 make git-nostr-bridge
 ```
@@ -180,10 +180,10 @@ Your git-nostr-bridge is now ready for use
 
 **Watch out for a conflict with the gn command from https://gn.googlesource.com **
 
-Clone the gitnostr repository and build the cli components
+Clone **this** repository and build the cli components (same fork as above).
 
 ```bash
-git clone https://github.com/spearson78/gitnostr
+git clone https://github.com/arbadacarbaYK/gitnostr.git
 cd gitnostr
 make git-nostr-cli
 ```
