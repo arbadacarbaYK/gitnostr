@@ -57,6 +57,8 @@ git-nostr-bridge will then react to these events and update the DB and create an
 
 ## Supported NIPs & Kinds
 
+> **NIP-46 (remote signing):** This **bridge does not implement** NIP-46. It never holds user nsecs or speaks the kind `24133` protocol. Users sign in a **client** (e.g. gittr in the browser with Amber); relays and the bridge only observe **ordinary signed events**. If you are implementing pairing, URIs, or QR flows, use the gittr docs: [NIP-46 integration](https://github.com/arbadacarbaYK/gittr/blob/main/docs/NIP46_REMOTE_SIGNER_INTEGRATION.md) and [NIPs list / NIP-46](https://github.com/arbadacarbaYK/gittr/blob/main/docs/NIPS_AND_EVENT_KINDS.md).
+
 - **Kind 50** – repository permissions (original gitnostr protocol)
 - **Kind 51** – repository metadata (original gitnostr protocol, legacy, read-only)
 - **Kind 52** – SSH keys
@@ -72,7 +74,7 @@ git-nostr-bridge will then react to these events and update the DB and create an
 - **Kind 30618 (NIP-34)** – repository state announcements (required for ngit clients like gitworkshop.dev)
 - **Kind 9735 (NIP-57)** – zaps (Lightning payments)
 - **Kind 9806** – bounties (custom extension)
-- **NIPs**: NIP-01 (base protocol), NIP-11 (relay info), NIP-19 (bech32), NIP-22 (comments), NIP-25 (reactions), NIP-33/34 (repositories), NIP-46 (remote signer), NIP-57 (zaps), NIP-96 (Blossom URLs in `clone` tags), NIP-C0 (code snippets)
+- **NIPs**: NIP-01 (base protocol), NIP-11 (relay info), NIP-19 (bech32), NIP-22 (comments), NIP-25 (reactions), NIP-33/34 (repositories), NIP-46 (**client-side only** — see note above; not bridge logic), NIP-57 (zaps), NIP-96 (Blossom URLs in `clone` tags), NIP-C0 (code snippets)
 
 ## gittr.space enhancements
 
