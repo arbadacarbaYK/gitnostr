@@ -1,7 +1,4 @@
-# gitnostr bridge (gittr.space fork)
-
-This fork keeps the original gitnostr bridge architecture intact and layers in the optional enhancements we rely on at gittr.space (HTTP fast lane, watch-all mode, dedupe cache, etc.). Every addition is gated so operators can run the classic bridge or enable the extra features as needed.
-
+# gitnostr by @spearson78 (gittr fork)
 
 A proof of concept integration of git and nostr providing
 
@@ -10,6 +7,13 @@ A proof of concept integration of git and nostr providing
 - repository permission management
 
 This will hopefully form part of a solution for creating a decentralized version of the github/gitlab experience.
+
+## Documentation
+
+- **[SSH & Git Access Guide](SSH_GIT_GUIDE.md)** - Complete guide for using SSH with git-nostr-bridge (cloning, pushing, pulling, permissions)
+- **[SSH & Git guide](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
+- **[CLI push example](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
+- **[README](README.md)** - Setup and configuration instructions (this file)
 
 I chose to build on top of the existing git tooling to allow the client side dev tools to remain largely unchanged for daily work (standard git commands work including push and pull)
 
@@ -41,7 +45,8 @@ Connects to a set of relays and:
 
 Configured as the command for a nostr users ssh-key in the authorized_keys file.
 Whenever a user tries to perform a git operation (push/pull) git-nostr-ssh will perform an access control check.
-Repository owners are always treated as `ADMIN` for their own repositories, even if cached permission rows are missing/stale.
+Repository owners are always treated as `ADMIN` for their own repositories, even if a cached permission row is missing/stale.
+If a repository has a configured push paywall (`push_cost_sats > 0`), SSH write operations (`git-receive-pack`) also require a non-expired paid authorization grant in bridge SQLite. If a pending invoice already exists for the payer identity, SSH can print `pending invoice (BOLT11): ...` directly. Each successful push consumes one paid authorization.
 
 ### git-nostr-hook
 
@@ -55,62 +60,14 @@ Command line tool with similar options to the github cli that will publish the r
 
 git-nostr-bridge will then react to these events and update the DB and create any git repos needed.
 
-## Supported NIPs & Kinds
-
-> **NIP-46 (remote signing):** This **bridge does not implement** NIP-46. It never holds user nsecs or speaks the kind `24133` protocol. Users sign in a **client** (e.g. gittr in the browser with Amber); relays and the bridge only observe **ordinary signed events**. If you are implementing pairing, URIs, or QR flows, use the gittr docs: [NIP-46 integration](https://github.com/arbadacarbaYK/gittr/blob/main/docs/NIP46_REMOTE_SIGNER_INTEGRATION.md) and [NIPs list / NIP-46](https://github.com/arbadacarbaYK/gittr/blob/main/docs/NIPS_AND_EVENT_KINDS.md).
-
-- **Kind 50** – repository permissions (original gitnostr protocol)
-- **Kind 51** – repository metadata (original gitnostr protocol, legacy, read-only)
-- **Kind 52** – SSH keys
-- **Kind 1111 (NIP-22)** – comments (issue/PR/patch comments)
-- **Kind 1337 (NIP-C0)** – code snippets
-- **Kind 1617 (NIP-34)** – patches (patch-based code contributions)
-- **Kind 1618 (NIP-34)** – pull requests
-- **Kind 1619 (NIP-34)** – pull request updates
-- **Kind 1621 (NIP-34)** – issues
-- **Kind 1630-1633 (NIP-34)** – status events (Open/Applied/Closed/Draft)
-- **Kind 10317 (NIP-34)** – user GRASP list (preferred GRASP servers)
-- **Kind 30617 (NIP-34)** – replaceable repository announcements (primary source)
-- **Kind 30618 (NIP-34)** – repository state announcements (required for ngit clients like gitworkshop.dev)
-- **Kind 9735 (NIP-57)** – zaps (Lightning payments)
-- **Kind 9806** – bounties (custom extension)
-- **NIPs**: NIP-01 (base protocol), NIP-11 (relay info), NIP-19 (bech32), NIP-22 (comments), NIP-25 (reactions), NIP-33/34 (repositories), NIP-46 (**client-side only** — see note above; not bridge logic), NIP-57 (zaps), NIP-96 (Blossom URLs in `clone` tags), NIP-C0 (code snippets)
-
-## gittr.space enhancements
-
-This fork carries additional bridge capabilities (HTTP fast-lane, merged relay/HTTP queue,
-deduplication cache, and a "watch-all" mode) that we rely on in production. 
-
-### Platform-Wide Enhancements Overview
-
-![Comprehensive gittr.space platform enhancements](./docs/gittr-platform-enhancements.png)
-
-This diagram shows **all enhancements** added to the gittr.space platform across the entire stack:
-
-- **🔵 Bridge Enhancements**: HTTP API, direct event channel, deduplication, watch-all mode, structured logging
-- **🟣 Frontend/UI**: Multiple themes, explore page, user profiles, fuzzy finder, code search
-- **🟢 File Fetching System**: Multi-source parallel fetching, prioritization, caching, URL normalization, README image handling, GitHub OAuth token support for private repositories
-- **🟠 GRASP Protocol**: Server detection, clone/relays tags, proactive sync, NIP-96 Blossom support
-- **🔴 Collaboration**: Issues with bounties, pull requests, projects (Kanban), discussions, contributor tracking
-- **🟡 Payments**: Zap repositories, issue bounties, zap distribution, payment settings, bounty hunt page
-- **🔵 Notifications**: Nostr DM, Telegram DM, Telegram channel announcements
-- **🔵 NIP Extensions**: NIP-25 (stars), NIP-51 (following), NIP-46 (remote signer), NIP-57 (zaps), NIP-96 (Blossom)
-- **🟤 Storage**: Browser localStorage, metadata caching, optimized repository storage
-
-### Detailed Documentation
-
-See [`docs/gittr-enhancements.md`](docs/gittr-enhancements.md) for the **bridge-specific** annotated diagram and upstream plan, [`docs/STANDALONE_BRIDGE_SETUP.md`](docs/STANDALONE_BRIDGE_SETUP.md) for a complete configuration reference, and
-[`docs/file-fetch-flow.md`](docs/file-fetch-flow.md) for how gittr's file list/content fallbacks use the bridge APIs.
-
-> **Note:** For detailed file fetching insights and best practices, see [`FILE_FETCHING_INSIGHTS.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/FILE_FETCHING_INSIGHTS.md) in the main gittr repository.
-These docs use the 🆕 badge to highlight fork-only improvements so upstream reviewers know what still needs a PR.
-
 
 # Setup Instructions
 
 **Currently this project is Linux only**
 **Go version 1.20+ is required**
 **It is recommended to use a local private relay for testing. Testing was performed using https://github.com/scsibug/nostr-rs-relay**
+
+**gittr.space:** To install **only** the bridge (outside the gittr monorepo), clone **`https://github.com/arbadacarbaYK/gitnostr`** — this fork has the paywall, NIP-34 state, and other changes gittr expects. The [original repo](https://github.com/spearson78/gitnostr) is kept as upstream attribution; **do not use it for gittr production builds** or you will be missing those features. Inside gittr, build from **`gittr/ui/gitnostr/`** (this directory).
 
 ## git-nostr-bridge
 
@@ -125,7 +82,7 @@ sudo useradd --create-home git-nostr
 sudo su - git-nostr
 ```
 
-Clone **this** repository (canonical for gittr.space; [upstream history](https://github.com/spearson78/gitnostr)) and build the bridge components.
+Clone the **gittr-maintained** gitnostr fork and build the bridge components
 
 ```bash
 git clone https://github.com/arbadacarbaYK/gitnostr.git
@@ -182,7 +139,7 @@ Your git-nostr-bridge is now ready for use
 
 **Watch out for a conflict with the gn command from https://gn.googlesource.com **
 
-Clone **this** repository and build the cli components (same fork as above).
+Clone the **gittr-maintained** gitnostr fork and build the cli components
 
 ```bash
 git clone https://github.com/arbadacarbaYK/gitnostr.git
@@ -234,13 +191,6 @@ Create a test repository and clone it. replace <publickey> with the hex represen
 ./bin/gn repo create test
 ./bin/gn repo clone  <publickey>:test
 ```
-
-**Note:** The CLI now uses **NIP-34 (kind 30617)** for repository announcements. The `repo create` command publishes events with:
-- Required `d` tag containing the repository name
-- Optional `clone` tags if `gitSshBase` is configured
-- Legacy JSON in content for backward compatibility with older bridges
-
-The `repo clone` command queries both legacy (kind 51) and NIP-34 (kind 30617) events for maximum compatibility.
 
 You can set write permission for your repository with the following command. replace <publickey> with the hex represenation of your public key. If you are using a nip05 capable public key you can use the nip05 identifier instead.
 

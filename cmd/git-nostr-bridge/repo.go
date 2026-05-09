@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,12 +11,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
-	"github.com/nbd-wtf/go-nostr"
 	"github.com/arbadacarbaYK/gitnostr"
 	"github.com/arbadacarbaYK/gitnostr/bridge"
 	"github.com/arbadacarbaYK/gitnostr/protocol"
+	"github.com/nbd-wtf/go-nostr"
+	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
 func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) error {
@@ -72,16 +75,16 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 
 		// Set default values for NIP-34
 		repo.RepositoryName = repoName
-		repo.PublicRead = true  // Default for NIP-34
+		repo.PublicRead = true   // Default for NIP-34
 		repo.PublicWrite = false // Default for NIP-34
 		repo.Deleted = isDeleted
 		repo.Archived = isArchived
 	} else {
 		// Legacy kind 51 - parse from JSON content
-	err := json.Unmarshal([]byte(event.Content), &repo)
-	if err != nil {
-		return fmt.Errorf("malformed repository: %w : %v", err, event.Content)
-	}
+		err := json.Unmarshal([]byte(event.Content), &repo)
+		if err != nil {
+			return fmt.Errorf("malformed repository: %w : %v", err, event.Content)
+		}
 		repoName = repo.RepositoryName
 	}
 
@@ -106,6 +109,8 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		if err != nil {
 			return fmt.Errorf("delete repository permissions failed: %w", err)
 		}
+		_, _ = db.Exec("DELETE FROM RepositoryPushPolicy WHERE OwnerPubKey=? AND RepositoryName=?;", event.PubKey, repoName)
+		_, _ = db.Exec("DELETE FROM RepositoryPushPayment WHERE OwnerPubKey=? AND RepositoryName=?;", event.PubKey, repoName)
 		if err := os.RemoveAll(repoPath); err != nil && !errors.Is(err, fs.ErrNotExist) {
 			return fmt.Errorf("remove repository path failed: %w", err)
 		}
@@ -125,6 +130,26 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 
 	if affected == 1 {
 		log.Printf("✅ [Bridge] Repository updated: pubkey=%s repo=%s\n", event.PubKey, repoName)
+	}
+
+	// Optional repo-level push cost policy from NIP-34 tags.
+	// Tag format: ["push_cost_sats", "<integer>"].
+	pushCostSats := 0
+	for _, tag := range event.Tags {
+		if len(tag) >= 2 && tag[0] == "push_cost_sats" {
+			if parsed, parseErr := strconv.Atoi(strings.TrimSpace(tag[1])); parseErr == nil && parsed >= 0 {
+				pushCostSats = parsed
+			}
+			break
+		}
+	}
+	_, err = db.Exec(
+		"INSERT INTO RepositoryPushPolicy (OwnerPubKey,RepositoryName,PushCostSats,UpdatedAt) VALUES (?,?,?,?) ON CONFLICT DO UPDATE SET PushCostSats=?,UpdatedAt=? WHERE UpdatedAt<=?;",
+		event.PubKey, repoName, pushCostSats, updatedAt,
+		pushCostSats, updatedAt, updatedAt,
+	)
+	if err != nil {
+		return fmt.Errorf("insert push policy failed: %w", err)
 	}
 
 	err = os.MkdirAll(repoParentPath, 0700)
@@ -217,6 +242,43 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		}
 	}
 
+	// CRITICAL: Create symlink from npub to hex pubkey for NIP-34 compatibility
+	// Clone URLs use npub format (per NIP-34 spec), but we store repos by hex pubkey
+	// This symlink allows both formats to work: hex (storage) and npub (URLs)
+	if event.PubKey != "" && len(event.PubKey) == 64 {
+		// Check if pubkey is valid hex
+		if _, err := hex.DecodeString(event.PubKey); err == nil {
+			// Encode hex pubkey to npub format
+			// go-nostr nip19 package: EncodePublicKey(publicKeyHex string, masterRelay string)
+			// masterRelay can be empty string for npub encoding
+			npub, err := nip19.EncodePublicKey(event.PubKey, "")
+			if err == nil {
+				npubParentPath := filepath.Join(reposDir, npub)
+				// Create symlink from npub to hex directory
+				// Only create if it doesn't exist or is broken
+				if _, err := os.Lstat(npubParentPath); os.IsNotExist(err) {
+					err = os.Symlink(event.PubKey, npubParentPath)
+					if err == nil {
+						log.Printf("🔗 [Bridge] Created npub symlink: %s -> %s\n", npub, event.PubKey)
+					} else {
+						log.Printf("⚠️ [Bridge] Failed to create npub symlink: %v\n", err)
+					}
+				} else {
+					// Check if existing symlink points to correct target
+					target, err := os.Readlink(npubParentPath)
+					if err == nil && target != event.PubKey {
+						// Symlink exists but points to wrong target, update it
+						os.Remove(npubParentPath)
+						err = os.Symlink(event.PubKey, npubParentPath)
+						if err == nil {
+							log.Printf("🔗 [Bridge] Updated npub symlink: %s -> %s\n", npub, event.PubKey)
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -237,7 +299,7 @@ func cloneRepository(cloneUrl, repoPath string) error {
 	err := os.MkdirAll(parentDir, 0700)
 	if err != nil {
 		return fmt.Errorf("failed to create parent directory: %w", err)
-		}
+	}
 
 	// Clone repository
 	log.Printf("🔍 [Bridge] Executing: git clone --bare %s %s\n", normalizedUrl, repoPath)

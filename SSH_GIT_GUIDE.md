@@ -35,17 +35,31 @@ If you're using `gittr.space`:
 The bridge supports multiple formats for the owner identifier in clone URLs:
 
 ```bash
-# Using npub (recommended, per NIP-34 specification)
-git clone git@git.gittr.space:npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/repo-name.git
+# Using npub (recommended, per NIP-34 specification) — use the npub from your repo page
+git clone git@gittr.space:<YOUR_NPUB>/repo-name.git
 
 # Using NIP-05 (human-readable)
-git clone git@git.gittr.space:geek@primal.net/repo-name.git
+git clone git@gittr.space:alice@example.com/repo-name.git
 
 # Using hex pubkey (64-char)
-git clone git@git.gittr.space:daa41bedb68591363bf4407f687cb9789cc543ed024bb77c22d2c84d88f54153/repo-name.git
+git clone git@gittr.space:0000000000000000000000000000000000000000000000000000000000000001/repo-name.git
 ```
 
 All three formats resolve to the same repository.
+
+## SSH Username Compatibility
+
+Both SSH usernames are supported for Git operations:
+
+```bash
+# Preferred (matches bridge Unix account name)
+git clone git-nostr@gittr.space:<owner-identifier>/<repo-name>.git
+
+# Compatibility alias (GitHub-style; same host and keys)
+git clone git@gittr.space:<owner-identifier>/<repo-name>.git
+```
+
+If one username fails in your local SSH config, try the other. Both map to the same bridge permission checks. **Always use the clone URL shown on your repository page** (`gittr.space` / `NEXT_PUBLIC_GIT_SSH_BASE`) in case your host uses a different SSH hostname than this guide’s examples.
 
 ## Workflow 1: Create and Add Files via SSH
 
@@ -58,7 +72,7 @@ Create a new repository and push your local files:
 # Go to "Create repository" page, enter name, click "Create Empty Repository"
 
 # 2. Clone the empty repository
-git clone git@git.gittr.space:<your-identifier>/<repo-name>.git
+git clone git@gittr.space:<your-identifier>/<repo-name>.git
 cd <repo-name>
 
 # 3. Copy your local files into the cloned repository
@@ -86,7 +100,7 @@ cd <repo-name>
 # Go to "Create repository" page, enter name, click "Create Empty Repository"
 
 # 3. Add gittr as a remote
-git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
+git remote add gittr git@gittr.space:<your-identifier>/<repo-name>.git
 
 # 4. Push to gittr
 git push gittr main
@@ -108,7 +122,7 @@ cd <repo-name>
 # Go to "Create repository" page, enter name, click "Create Empty Repository"
 
 # 3. Add gittr as a remote
-git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
+git remote add gittr git@gittr.space:<your-identifier>/<repo-name>.git
 
 # 4. Push to gittr
 git push gittr main
@@ -130,7 +144,7 @@ cd <repo-name>
 # Go to "Create repository" page, enter name, click "Create Empty Repository"
 
 # 3. Add gittr as a remote
-git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
+git remote add gittr git@gittr.space:<your-identifier>/<repo-name>.git
 
 # 4. Push to gittr
 git push gittr main
@@ -147,7 +161,7 @@ Update an existing repository with local changes:
 
 ```bash
 # 1. Clone the existing repository
-git clone git@git.gittr.space:<owner-identifier>/<repo-name>.git
+git clone git@gittr.space:<owner-identifier>/<repo-name>.git
 cd <repo-name>
 
 # 2. Make your changes
@@ -174,7 +188,7 @@ Sync updates from GitHub to an existing Nostr repository:
 
 ```bash
 # 1. Clone the existing Nostr repository
-git clone git@git.gittr.space:<your-identifier>/<repo-name>.git
+git clone git@gittr.space:<your-identifier>/<repo-name>.git
 cd <repo-name>
 
 # 2. Add GitHub as a remote
@@ -197,7 +211,7 @@ Sync updates from any Git server to an existing Nostr repository:
 
 ```bash
 # 1. Clone the existing Nostr repository
-git clone git@git.gittr.space:<your-identifier>/<repo-name>.git
+git clone git@gittr.space:<your-identifier>/<repo-name>.git
 cd <repo-name>
 
 # 2. Add the Git server as a remote
@@ -220,7 +234,7 @@ Sync updates from Codeberg to an existing Nostr repository:
 
 ```bash
 # 1. Clone the existing Nostr repository
-git clone git@git.gittr.space:<your-identifier>/<repo-name>.git
+git clone git@gittr.space:<your-identifier>/<repo-name>.git
 cd <repo-name>
 
 # 2. Add Codeberg as a remote
@@ -253,54 +267,63 @@ This publishes:
 - `git push` updates the repository on the bridge server
 - "Push to Nostr" publishes NIP-34 events to Nostr relays
 - Both are needed for full functionality: bridge for git operations, Nostr events for discovery
-- Publishing to Nostr requires signer approval (NIP-07 extension or local nsec signer).
+- Publishing to Nostr always requires signer approval (NIP-07 extension or local nsec signer)
 
 ## Push Paywall Flow (Optional Per Repository)
 
-Some repositories can require a sats payment before pushes are accepted.
+Some repositories require sats payment before push is accepted.
 
-How it works:
-1. Repo owner sets **Push Cost (sats)** in repository settings.
-2. A push attempt checks whether your pubkey has an active paid authorization.
-3. If blocked, SSH prints a payer-specific pending invoice string when available.
-4. Pay invoice with any Lightning wallet.
-5. Retry push (`git push origin main`) to continue the Git operation.
+Flow:
+1. Repo owner sets **Push Cost (sats)**.
+2. User opens repo in web UI and clicks **Push to Nostr** to create invoice.
+3. User pays the invoice (QR/BOLT11).
+4. Server grants short-lived, **single-use** push authorization.
+5. User retries `git push` to continue the Git operation. **Each successful push consumes one authorization.**
 
 Notes:
-- Authorization is bound to `owner/repo + payer pubkey`, so simultaneous payments by different users stay isolated.
-- Each **successful** `git push` consumes one paid authorization. Unused authorization expires after a short time.
-- If SSH prints `pending invoice (BOLT11): ...`, that invoice is already tied to your payer identity and can be paid directly.
+- Repo owners can enable non-zero Push Cost after configuring either LNbits Invoice Key or Blink API Key in Settings -> Account.
+- For SSH, authorization is bound to payer pubkey + owner/repo, so concurrent users are authorized independently.
 
 ## Troubleshooting
+
+### SSH asks for a password (after you added your key)
+
+gittr does **not** use a shell password for Git over SSH. A password prompt almost always means **public key authentication did not run successfully** (SSH then falls back to password).
+
+1. **Confirm you use the right private key** (same machine where you generated or pasted the **public** key into Settings → SSH Keys):
+   ```bash
+   GIT_SSH_COMMAND='ssh -v -o IdentitiesOnly=yes -i ~/.ssh/<your-key>' git ls-remote git@gittr.space:<your-npub>/<repo>.git
+   ```
+   In the `-v` output you should see **Offering public key** and then **Server accepts key** (or similar). If it skips your key, fix the `-i` path or add the key to `ssh-agent`.
+
+2. **Try the `git-nostr@` username** if `git@` still misbehaves on your network or client; both are valid on gittr.
+
+3. **Wait a few seconds** after saving the key in the web UI so relays and the bridge can refresh `authorized_keys`.
+
+4. **Server operators:** if `sshd` was configured with `Match User git` and a **separate** `AuthorizedKeysFile /etc/ssh/git-authorized_keys`, that file is a **manual copy** of keys and goes **stale** whenever someone adds a key in the UI — `git@` logins then fail until sshd reads the **live** file the bridge updates (`/home/git-nostr/.ssh/authorized_keys`). See `docs/SETUP_INSTRUCTIONS.md` and `scripts/ensure-sshd-git-live-authorized-keys.sh` in the gittr repo.
 
 ### "Permission denied (publickey)"
 - Ensure your SSH key is added in Settings → SSH Keys
 - Check that your private key is in `~/.ssh/` with correct permissions (600)
 - Verify the bridge service has processed your key (may take a few seconds)
-
-### "Permission denied" (for read operations on private repos)
-- Private repositories are only accessible to the owner and maintainers
-- Access is determined by your **Nostr pubkey (npub)**, not your GitHub username
-- If you're a maintainer on GitHub but can't access a private repo:
-  - The repository owner needs to add your Nostr pubkey (npub) as a maintainer in Repository Settings → Contributors
-  - Your GitHub username alone isn't enough - you need your npub explicitly added
-- **Identity Mapping**: If you've done GitHub OAuth, your GitHub identity is linked to your Nostr pubkey. However, for access control, the owner must still add your npub as a maintainer.
-- **CLI/API**: Same access control applies - you'll see `fatal: permission denied for read operation` if you don't have access
+- Force a single key to avoid auth spam:
+  - `GIT_SSH_COMMAND='ssh -o IdentitiesOnly=yes -i ~/.ssh/<your-key>' git ls-remote git-nostr@gittr.space:<owner>/<repo>.git`
+- If you see `Too many authentication failures`, your SSH agent likely offered too many keys. Use `IdentitiesOnly=yes` as shown above.
+- If your IP was previously blocked by fail2ban, retry after unban/ban expiry.
 
 ### "Permission denied" (for write operations)
 - Only repository owners and users with WRITE or ADMIN permissions can push
 - Check repository permissions in Settings → Repository → Permissions
 
 ### "push payment required for '<owner>/<repo>' (<n> sats)"
-- The repository has push paywall enabled.
 - If SSH prints `pending invoice (BOLT11): ...`, pay that exact invoice.
-- If no invoice is printed, generate one in the repository web UI via **Push to Nostr** once.
-- Run `git push` again.
+- If no invoice is printed, generate one in the repository web UI (Push to Nostr).
+- Retry `git push`.
+- If owner setup fails, verify Settings -> Account has either LNbits Invoice Key or Blink API Key configured.
 
 ### "push payment authorization expired"
-- Previous paid authorization window has expired.
-- Pay the printed pending invoice if shown, or generate/pay a new invoice in web UI.
-- Retry `git push`.
+- The paid authorization window expired.
+- Pay the printed pending invoice (if shown) or create/pay a fresh invoice, then retry push.
 
 ### "Repository not found"
 - Check that the repository exists on gittr
@@ -308,9 +331,9 @@ Notes:
 - If you just created the repository, wait a moment for the bridge to process it
 
 ### "Network is unreachable" (port 22)
-- Verify SSH port 22 is accessible: `ssh -v git-nostr@git.gittr.space`
+- Verify SSH port 22 is accessible: `ssh -v git-nostr@gittr.space`
 - Check if your network/firewall blocks port 22
-- Try HTTPS clone instead: `git clone https://git.gittr.space/<owner-identifier>/<repo-name>.git`
+- Try HTTPS clone instead: `git clone https://gittr.space/<owner-identifier>/<repo-name>.git`
 
 ## Security Notes
 
@@ -338,6 +361,6 @@ Notes:
 
 ## See Also
 
-- **[Main gittr.space SSH Git Guide](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?path=docs&file=docs%2FSSH_GIT_GUIDE.md)** - Complete user-facing guide for gittr.space with web UI workflows
+- **[SSH & Git guide (gittr docs)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing guide with web UI workflows (same content as on a hosted instance)
 - [git-nostr-bridge README](README.md) - Setup and configuration instructions
 - [git-nostr-cli Usage](README.md#git-nostr-cli-gn) - Command-line tool documentation
