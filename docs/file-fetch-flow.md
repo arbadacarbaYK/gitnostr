@@ -10,7 +10,7 @@ clients can reproduce the same behavior.
 - **Repository mirror**: when a NIP-34 event hits the relays (or `/api/event` via `BRIDGE_HTTP_PORT`),
   the bridge clones/updates the bare repo under `repositoryDir`.
 - **File tree API**: once cloned, a GET on `http://<bridge>/api/nostr/repo/tree?repo=<pk>/<name>` returns
-  a flat file list (used for directory views).
+  a flat file list (used for directory views). On **gittr.space**, the browser typically calls the **Next.js** route **`GET https://gittr.space/api/nostr/repo/files`** (same on-disk `repositoryDir/{pubkey}/{repo}.git` as the bridge), not only the bridge’s internal HTTP origin.
 - **File content API**: GET `.../api/nostr/repo/file-content?repo=<pk>/<name>&path=<file>&branch=<ref>`
   streams blob contents.
   - **CRITICAL**: File paths in the `path` parameter must be URL-encoded using `encodeURIComponent()` to handle non-ASCII characters (Cyrillic, Chinese, accented characters, etc.). The API automatically decodes them and handles UTF-8 correctly.
@@ -27,7 +27,7 @@ clients can reproduce the same behavior.
 
 1. **User opens a repo tab** (files, issues, PRs, commits, etc.).
 2. UI tries cached data → embedded NIP-34 files → bridge tree API.
-3. 🆕 If the bridge returns 404, gittr triggers `repo/clone`, waits ~3 seconds, retries tree API (and consumes the `grasp-repo-cloned` SSE).
+3. 🆕 If **`GET /api/nostr/repo/files`** returns **404** *or* **200 with `files: []`** (empty bare placeholder / not mirrored yet), gittr triggers **`POST /api/nostr/repo/clone`**, waits / polls, then retries the files API (and may consume the `grasp-repo-cloned` SSE). The **`repo`** query parameter is normalized server-side so it matches the bridge’s directory layout.
 4. If still missing, UI falls back to GitHub/GitLab/Codeberg APIs using the normalized `source` URLs.
    - **GitLab pagination**: GitLab API returns max 100 items per page - gittr implements pagination to fetch ALL files (critical for repos with >100 files)
 5. File open actions follow the same order: cache → embedded content → 🆕 multi-source fetch (bridge + external) → Nostr fallback → git servers.
