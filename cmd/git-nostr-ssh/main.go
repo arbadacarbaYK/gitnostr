@@ -13,6 +13,8 @@ import (
 
 	"github.com/arbadacarbaYK/gitnostr"
 	"github.com/arbadacarbaYK/gitnostr/bridge"
+	"github.com/nbd-wtf/go-nostr/nip05"
+	"github.com/nbd-wtf/go-nostr/nip19"
 )
 
 func isReadAllowed(rights *string) bool {
@@ -78,12 +80,36 @@ func main() {
 		os.Exit(1)
 	}
 
-	ownerPubKey := repoSplit[0]
-	_, err = hex.DecodeString(ownerPubKey)
-	if err != nil {
+	ownerPubKeyInput := repoSplit[0]
+	var ownerPubKey string
+
+	// Resolve ownerPubKey: supports hex, npub, or NIP-05 format
+	if _, err := hex.DecodeString(ownerPubKeyInput); err == nil && len(ownerPubKeyInput) == 64 {
+		// Already hex format
+		ownerPubKey = strings.ToLower(ownerPubKeyInput)
+	} else if strings.HasPrefix(ownerPubKeyInput, "npub") {
+		// Decode npub to hex
+		decoded, _, err := nip19.Decode(ownerPubKeyInput)
+		if err != nil || len(decoded) != 32 {
+			fmt.Fprintf(os.Stderr, "fatal: invalid npub format in '%s'\n", repoParam)
+			fmt.Fprintf(os.Stderr, "hint: Repository path must be in format: <hex-pubkey>/<repo-name> or <npub>/<repo-name>\n")
+			os.Exit(1)
+		}
+		// Convert 32-byte pubkey to hex string
+		ownerPubKey = strings.ToLower(hex.EncodeToString(decoded))
+	} else if strings.Contains(ownerPubKeyInput, "@") {
+		// Resolve NIP-05 to hex pubkey
+		profile := nip05.QueryIdentifier(ownerPubKeyInput)
+		if profile == "" {
+			fmt.Fprintf(os.Stderr, "fatal: failed to resolve NIP-05 '%s'\n", ownerPubKeyInput)
+			fmt.Fprintf(os.Stderr, "hint: Repository path must be in format: <hex-pubkey>/<repo-name>, <npub>/<repo-name>, or <nip05>/<repo-name>\n")
+			os.Exit(1)
+		}
+		ownerPubKey = strings.ToLower(profile)
+	} else {
 		fmt.Fprintf(os.Stderr, "fatal: invalid repository owner pubkey in '%s'\n", repoParam)
-		fmt.Fprintf(os.Stderr, "hint: Repository path must be in format: <64-char-hex-pubkey>/<repo-name>\n")
-		fmt.Fprintf(os.Stderr, "hint: Example: git@gittr.space:9a83779e75080556c656d4d418d02a4d7edbe288a2f9e6dd2b48799ec935184c/repo-name.git\n")
+		fmt.Fprintf(os.Stderr, "hint: Repository path must be in format: <hex-pubkey>/<repo-name>, <npub>/<repo-name>, or <nip05>/<repo-name>\n")
+		fmt.Fprintf(os.Stderr, "hint: Example: git@gittr.space:npub1.../repo-name.git or git@gittr.space:user@domain.com/repo-name.git\n")
 		os.Exit(1)
 	}
 
@@ -167,12 +193,12 @@ func main() {
 			fmt.Fprintf(os.Stderr, "hint: Contact the repository owner to request write access.\n")
 			os.Exit(1)
 		}
-		// Optional push paywall: if repo has a push cost, the caller must have an unexpired paid grant.
+		// Optional push paywall: if repo has a push cost, the caller must have one unpaid->paid invoice intent.
 		var pushCostSats int
 		costRow := db.QueryRow("SELECT PushCostSats FROM RepositoryPushPolicy WHERE OwnerPubKey=? AND RepositoryName=?", ownerPubKey, repoName)
 		costErr := costRow.Scan(&pushCostSats)
 		if costErr != nil && !errors.Is(costErr, sql.ErrNoRows) {
-			// Graceful fallback for deployments without paywall tables.
+			// Graceful fallback for older DBs without this table.
 			if !strings.Contains(strings.ToLower(costErr.Error()), "no such table") {
 				fmt.Fprintf(os.Stderr, "fatal: failed to check push policy: %v\n", costErr)
 				os.Exit(1)
@@ -180,9 +206,9 @@ func main() {
 			pushCostSats = 0
 		}
 		if pushCostSats > 0 {
-			var paidUntil int64
-			paymentRow := db.QueryRow("SELECT PaidUntil FROM RepositoryPushPayment WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=?", ownerPubKey, repoName, targetPubKey)
-			payErr := paymentRow.Scan(&paidUntil)
+			var hasPaidIntent int
+			paymentRow := db.QueryRow("SELECT 1 FROM RepositoryPushPaymentIntent WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=? AND Status='paid' LIMIT 1", ownerPubKey, repoName, targetPubKey)
+			payErr := paymentRow.Scan(&hasPaidIntent)
 			if payErr != nil {
 				if errors.Is(payErr, sql.ErrNoRows) || strings.Contains(strings.ToLower(payErr.Error()), "no such table") {
 					fmt.Fprintf(os.Stderr, "fatal: push payment required for '%s/%s' (%d sats)\n", ownerPubKey, repoName, pushCostSats)
@@ -196,17 +222,6 @@ func main() {
 					os.Exit(1)
 				}
 				fmt.Fprintf(os.Stderr, "fatal: failed to check push payment status: %v\n", payErr)
-				os.Exit(1)
-			}
-			if time.Now().Unix() > paidUntil {
-				fmt.Fprintf(os.Stderr, "fatal: push payment authorization expired for '%s/%s'\n", ownerPubKey, repoName)
-				if invoice, invErr := getLatestPendingPushInvoice(db, ownerPubKey, repoName, targetPubKey); invErr == nil && invoice != "" {
-					fmt.Fprintf(os.Stderr, "hint: pending invoice (BOLT11): %s\n", invoice)
-					fmt.Fprintf(os.Stderr, "hint: this invoice is tied to your SSH/Nostr pubkey and this repository only.\n")
-					fmt.Fprintf(os.Stderr, "hint: pay the invoice, then retry git push.\n")
-				} else {
-					fmt.Fprintf(os.Stderr, "hint: Complete a new push authorization payment (%d sats) in the web UI (owner wallet via LNbits or Blink), then retry git push.\n", pushCostSats)
-				}
 				os.Exit(1)
 			}
 			consumePaywallGrant = true
@@ -235,7 +250,7 @@ func main() {
 	}
 
 	if consumePaywallGrant {
-		consumeResult, consumeErr := db.Exec("DELETE FROM RepositoryPushPayment WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=? AND PaidUntil>=?", ownerPubKey, repoName, targetPubKey, time.Now().Unix())
+		consumeResult, consumeErr := db.Exec("UPDATE RepositoryPushPaymentIntent SET Status='consumed', UpdatedAt=? WHERE IntentId=(SELECT IntentId FROM RepositoryPushPaymentIntent WHERE OwnerPubKey=? AND RepositoryName=? AND PayerPubKey=? AND Status='paid' ORDER BY PaidAt DESC, UpdatedAt DESC LIMIT 1)", time.Now().Unix(), ownerPubKey, repoName, targetPubKey)
 		if consumeErr != nil {
 			fmt.Fprintf(os.Stderr, "warning: push succeeded but failed to finalize paywall grant: %v\n", consumeErr)
 			return

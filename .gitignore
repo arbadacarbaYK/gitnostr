@@ -1,1 +1,3 @@
 bin
+/git-nostr-ssh
+*.db
