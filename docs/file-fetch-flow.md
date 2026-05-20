@@ -15,25 +15,27 @@ clients can reproduce the same behavior.
   streams blob contents.
   - **CRITICAL**: File paths in the `path` parameter must be URL-encoded using `encodeURIComponent()` to handle non-ASCII characters (Cyrillic, Chinese, accented characters, etc.). The API automatically decodes them and handles UTF-8 correctly.
   - Example: `path=${encodeURIComponent('ЧИТАЙ.md')}` or `path=${encodeURIComponent('读我D.md')}`
-- **Clone trigger**: if the repo is missing, gittr asks `.../api/nostr/repo/clone` and the bridge pulls
-  it from the `clone`/`source` tags in the NIP-34 event, then broadcasts a `grasp-repo-cloned` SSE for
-  auto-refresh.
+- **Clone trigger**: if the repo is missing on disk, gittr can `POST .../api/nostr/repo/clone` (bare mirror from a `clone` HTTPS URL), then read the tree from `/api/nostr/repo/files`. The UI may also call **`GET /api/git/repo-files?sourceUrl=...`** to shallow-clone a remote GRASP URL into a temp directory and show files **before** the bare mirror finishes.
 - **Blossom clones**: any HTTPS clone URL (including `https://blossom...`) is treated like a normal
   Git remote; the bridge just runs `git clone` against it (no extra APIs).
-- **Blossom URLs**: any HTTPS clone URL (including `https://blossom...`) is treated like a normal
-  Git remote; the bridge doesn’t need Blossom-specific APIs.
 
 ## 2. UI flow recap (gittr)
 
 1. **User opens a repo tab** (files, issues, PRs, commits, etc.).
 2. UI tries cached data → embedded NIP-34 files → bridge tree API.
-3. 🆕 If **`GET /api/nostr/repo/files`** returns **404** *or* **200 with `files: []`** (empty bare placeholder / not mirrored yet), gittr triggers **`POST /api/nostr/repo/clone`**, waits / polls, then retries the files API (and may consume the `grasp-repo-cloned` SSE). The **`repo`** query parameter is normalized server-side so it matches the bridge’s directory layout.
-4. If still missing, UI falls back to GitHub/GitLab/Codeberg APIs using the normalized `source` URLs.
+3. 🆕 For each **GRASP HTTPS** URL in the latest kind **30617** `clone[]` tags (in parallel):
+   - **`GET /api/nostr/repo/files`** (on-disk mirror)
+   - If empty/404: **`GET /api/git/repo-files?sourceUrl=<that URL>`** (remote shallow clone — first working mirror wins the race)
+   - If still needed: **`POST /api/nostr/repo/clone`**, await/poll bridge, optional `grasp-repo-cloned` event
+4. GitHub / GitLab / Codeberg are tried early when `source` or GitHub clone URLs exist (`prioritizeUpstreamCloneUrls`).
    - **GitLab pagination**: GitLab API returns max 100 items per page - gittr implements pagination to fetch ALL files (critical for repos with >100 files)
-5. File open actions follow the same order: cache → embedded content → 🆕 multi-source fetch (bridge + external) → Nostr fallback → git servers.
+5. File open actions follow the same order: cache → embedded content → multi-source fetch (bridge + upstream + GRASP shallow) → Nostr fallback.
 
-This is described in detail in gittr's [`docs/FILE_FETCHING_INSIGHTS.md`](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?path=docs&file=docs%2FFILE_FETCHING_INSIGHTS.md), but the bridge only needs to
-provide step 2/3 above.
+**Newest metadata:** latest kind **30617** on relays.  
+**Newest commit across every GRASP mirror:** not fully compared in gittr today — first successful tree in the parallel race, not max `HEAD` across servers. See gittr [`docs/FILE_FETCHING_INSIGHTS.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/FILE_FETCHING_INSIGHTS.md).
+
+This is described in detail in gittr's [`docs/FILE_FETCHING_INSIGHTS.md`](https://github.com/arbadacarbaYK/gittr/blob/main/docs/FILE_FETCHING_INSIGHTS.md), but the bridge only needs to
+provide the on-disk mirror (steps 1–3 in section 1 above).
 
 ### Push to Nostr Process
 
@@ -64,8 +66,7 @@ When pushing a repository to Nostr, the file content source follows this order:
 - If you want instant confirmation after publishing, enable the HTTP API via `BRIDGE_HTTP_PORT` and
   POST the same event JSON you sent to relays.
 - For GRASP-compatible flows, listen for the `grasp-repo-cloned` event (SSE) after calling the clone
-  API to know when the repo is ready.
+  API to know when the on-disk mirror is ready (optional if you already use remote shallow clone like gittr’s `/api/git/repo-files`).
 
 With these pieces, any frontend can implement the same file list/content fallbacks shown in gittr’s
 docs, while the bridge remains host-agnostic.
-
