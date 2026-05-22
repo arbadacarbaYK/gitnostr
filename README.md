@@ -1,33 +1,42 @@
-# gitnostr by @spearson78 (gittr fork)
+# gitnostr
 
-A proof of concept integration of git and nostr providing
+**Git-on-Nostr bridge for [gittr](https://gittr.space)** — [`arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (this repo) and [`ui/gitnostr/`](https://github.com/arbadacarbaYK/gittr/tree/main/ui/gitnostr) in the gittr monorepo are the **same project**.
 
-- repository management
-- ssh-key management
-- repository permission management
+**What this is (from the [gittr ecosystem table](https://github.com/arbadacarbaYK/gittr#nostr-git-ecosystem-how-gittr-fits)):** the **git server layer** — `git-nostr-bridge`, SSH/HTTPS bare repos, kind **52** SSH keys, optional **`push_cost_sats`** push paywall, **`git-nostr-cli`** (`gn`), SQLite ACL cache. **Not [ngit](https://ngit.dev)** (CLI + `nostr://` + gitworkshop).
 
-This will hopefully form part of a solution for creating a decentralized version of the github/gitlab experience.
+Integration of git and Nostr: repository management, SSH-key management, permission management — standard **`git push` / `git pull`** to your bridge (or **gittr.space**), with repo config on relays.
 
-## This fork vs **ngit** (separate projects)
+## gitnostr vs **ngit** (same comparison as gittr README)
 
-**ngit** is its own project: different repositories, different history, different architecture. It tackles Git-on-Nostr / GRASP-style hosting with that codebase.
+Both use **NIP-34** on relays; different **codebases** and default git workflow. Full forge comparison (gittr vs gitworkshop vs gitplaza): **[gittr README → Web client features](https://github.com/arbadacarbaYK/gittr#web-client-features-comparison)**.
 
-**This repository (`arbadacarbaYK/gitnostr`) is an alternative to ngit** when you want the **git-nostr** model instead: **git-nostr-bridge**, **git-nostr-ssh**, and a local SQLite cache, in the line descended from **spearson78/gitnostr** and extended for **gittr** (NIP-34 repo state on the bridge, push paywall grants in SQLite, and related behavior). Use this fork for gittr-style servers; use **ngit** if you are standardizing on that stack—**they are not interchangeable checkouts of the same code.**
-
-**Rough comparison**
-
-| | This **gitnostr** fork | **ngit** |
+| Layer | **gitnostr** (this repo) | **ngit** |
 | --- | --- | --- |
-| What it is | Go bridge + SSH helper + DB; meant to sit behind a web UI or other client you choose | Full project as defined in the **ngit** repositories |
-| Typical pairing | **gittr** ships it under `ui/gitnostr/` and mirrors it here for standalone installs | Consumed on its own release / layout |
+| Role | **Git server:** bridge watches relays → bare repos on disk → **SSH/HTTPS** | **CLI:** `ngit init`, `pr/` branches, **`nostr://`** via [git-remote-nostr](https://github.com/DanConwayDev/ngit-cli) |
+| Typical UI | **[gittr](https://gittr.space)** (issues, PRs, bounties, Pages, `/apps`, GitHub import) | **[gitworkshop](https://gitworkshop.dev)** (GRASP mirrors) |
+| Day-to-day git | `git@host:<npub>/repo.git` — no ngit binary required | `nostr://` remotes + ngit CLI |
+| Own bridge / paywall | **Yes** — `push_cost_sats`, NIP-34 **30617**, HTTP `/api/event`, watch-all mode | GRASP / ngit hosting — not this repo |
+| Relay outage | **SQLite** permission cache on bridge | ngit/GRASP stack |
 
-**Why people see a folder called `ngit` next to gittr:** the **gittr** monorepo is often deployed on disk under a directory literally named `ngit` (e.g. `/opt/ngit`)—**a naming convention from early project layout**, not “we replaced ourselves with the ngit codebase.” That tree is **gittr** (Next.js app + embedded `ui/gitnostr/`). Docs that say `cd ngit` or `WorkingDirectory=.../ngit` mean **that gittr checkout path**, not “clone the ngit project instead of gittr.”
+**gittr ≠ ngit:** gittr runs **gitnostr** on `git.gittr.space`. Same signed events (30617/30618, issues, PRs) can interoperate; gittr’s default transport is **SSH to the bridge**, not the ngit CLI.
+
+| Git access | **With gitnostr + gittr** | **ngit stack** |
+| --- | --- | --- |
+| SSH / HTTPS to bridge | **Yes** — primary on gittr.space | Via GRASP git hosts, not this bridge |
+| Self-host this bridge | **Yes** — clone this repo | ngit/GRASP model |
+| **`git-nostr-cli` (`gn`)** | **Yes** — in this tree | Different tool |
+| **`nostr://` clone** | **Interop** (gittr publishes `clone` tags; install git-remote-nostr) | **Native** to ngit |
+
+**Bridge components in this repo:** `git-nostr-bridge` · `git-nostr-ssh` · `git-nostr-db` (SQLite) · `git-nostr-cli` (`gn`). Details: [docs/gittr-enhancements.md](docs/gittr-enhancements.md).
 
 ## Documentation
 
 - **[SSH & Git Access Guide](SSH_GIT_GUIDE.md)** - Complete guide for using SSH with git-nostr-bridge (cloning, pushing, pulling, permissions)
-- **[SSH & Git guide](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
-- **[CLI push example](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
+- **[Bridge enhancements](docs/gittr-enhancements.md)** - HTTP API, watch-all, deduplication (gittr production)
+- **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Run without the gittr UI
+- **[File fetch flow](docs/file-fetch-flow.md)** - How gittr + bridge serve repo trees
+- **[SSH & Git guide (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
+- **[CLI push example (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
 
 I chose to build on top of the existing git tooling to allow the client side dev tools to remain largely unchanged for daily work (standard git commands work including push and pull)
 
@@ -81,7 +90,7 @@ git-nostr-bridge will then react to these events and update the DB and create an
 **Go version 1.20+ is required**
 **It is recommended to use a local private relay for testing. Testing was performed using https://github.com/scsibug/nostr-rs-relay**
 
-**gittr.space:** To install **only** the bridge (outside the gittr monorepo), clone **`https://github.com/arbadacarbaYK/gitnostr`** — this fork has the paywall, NIP-34 state, and other changes gittr expects. The [original repo](https://github.com/spearson78/gitnostr) is kept as upstream attribution; **do not use it for gittr production builds** or you will be missing those features. Inside gittr, build from **`gittr/ui/gitnostr/`** (this directory).
+**gittr.space:** To install **only** the bridge, clone **`https://github.com/arbadacarbaYK/gitnostr`** (this repo). Inside the gittr monorepo, build from **`ui/gitnostr/`** — same project, kept in sync with GitHub.
 
 ## git-nostr-bridge
 
@@ -96,7 +105,7 @@ sudo useradd --create-home git-nostr
 sudo su - git-nostr
 ```
 
-Clone the **gittr-maintained** gitnostr fork and build the bridge components
+Clone **gitnostr** and build the bridge components
 
 ```bash
 git clone https://github.com/arbadacarbaYK/gitnostr.git
@@ -153,7 +162,7 @@ Your git-nostr-bridge is now ready for use
 
 **Watch out for a conflict with the gn command from https://gn.googlesource.com **
 
-Clone the **gittr-maintained** gitnostr fork and build the cli components
+Clone **gitnostr** and build the cli components
 
 ```bash
 git clone https://github.com/arbadacarbaYK/gitnostr.git
@@ -180,7 +189,7 @@ Edit the config file at `~/.config/git-nostr/git-nostr-cli.json`. The default fi
 ```
 
 Add your relay of relays to the list of relays. **You should use a local relay for testing until the implementation is finalized.**
-Set your private key. **It is recommended to generate a new nostr private key for testing**
+Set your private key. **It is recommended to generate a new nostr private/public key pair for testing**
 Set gitSshBase to the ssh user@hostname where a git-nostr-bridge has been installed.
 
 My local testing config looks like this

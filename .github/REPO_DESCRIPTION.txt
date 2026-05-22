@@ -1,0 +1,1 @@
+Git-on-Nostr bridge (not ngit): SSH git push/pull, NIP-34 30617, kind-52 SSH keys, Lightning push paywall, SQLite ACL. Powers gittr.space — full ngit/gitworkshop comparison in arbadacarbaYK/gittr.

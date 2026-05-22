@@ -1,14 +1,13 @@
 # gittr.space Bridge Enhancements
 
-**Canonical repo:** [`github.com/arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (gittr.space–maintained fork).  
-This document tracks improvements layered on the original proof-of-concept; we still aim to contribute them back to [@spearson78’s upstream `gitnostr`](https://github.com/spearson78/gitnostr). The goal is to keep the
-interface identical while shipping the battle-tested additions we rely on in production.
+**Canonical repo:** [`github.com/arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) — the gittr project’s Git-on-Nostr bridge (also at `gittr/ui/gitnostr/`).  
+This document describes production bridge features gittr relies on.
 
 ![Diagram of enhancements](./gittr-enhancements.png)
 
-Blue boxes in the diagram highlight the pieces that do not exist in the upstream bridge yet.
+Blue boxes in the diagram are extensions beyond the earliest public git-nostr-bridge prototypes.
 
-> **Badge legend:** 🆕 marks functionality that exists only in this fork today (pending upstream).
+> **Badge legend:** 🆕 marks functionality added for gittr production.
 
 ## Feature summary
 
@@ -23,7 +22,7 @@ Blue boxes in the diagram highlight the pieces that do not exist in the upstream
 ### Configuration knobs
 
 - **`BRIDGE_HTTP_PORT` env** – Leave it unset to disable the HTTP listener entirely (pure relay mode,
-  identical to upstream). Set it when you want to POST events directly (defaults to `8080`, but any
+  identical to relay-only mode). Set it when you want to POST events directly (defaults to `8080`, but any
   port works and you can reverse-proxy it for auth/TLS).
 - **`gitRepoOwners` array** – Legacy behavior (non-empty) still scopes subscriptions to specific
   pubkeys. Leaving it empty switches on watch-all mode so public mirrors pick up every repo event.
