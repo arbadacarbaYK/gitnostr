@@ -2,9 +2,9 @@
 
 **Git bridge to Nostr** — [`arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (this repo) and [`ui/gitnostr/`](https://github.com/arbadacarbaYK/gittr/tree/main/ui/gitnostr) in the gittr monorepo are the **same codebase**.
 
-`git-nostr-bridge` watches Nostr for repo and SSH-key events, keeps **bare git repos on your disk**, and serves **`git push` / `git pull` over SSH or HTTPS**. Repo metadata lives on relays (NIP-34); the bridge is the **git server**. **[gittr.space](https://gittr.space)** is an optional web forge on top—you do **not** need any UI to use SSH.
+`git-nostr-bridge` watches Nostr for repo and SSH-key events, keeps **bare git repos on your disk**, and serves **`git push` / `git pull` over SSH or HTTPS**. Repo metadata lives on relays (NIP-34); the bridge is the **git server**. Pair with **[gittr](https://gittr.space)** for the full forge (issues, PRs, commits, Pages, bounties) on the same relays.
 
-## Git access (bridge-native — not “SSH via UI”)
+## Git access
 
 | What | How |
 | --- | --- |
@@ -33,8 +33,6 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 | **Shell-first operators** | Publish repos, keys, and ACL with **`git-nostr-cli` (`gn`)**; the bridge applies changes from relays (and optional HTTP). |
 | **Relay outages / flaky networks** | **SQLite** caches permissions and repo metadata so SSH ACL checks still work when relays are slow or down. |
 
-**Usually not the first choice if:** you only need **[ngit](https://ngit.dev)** + **[gitworkshop](https://gitworkshop.dev)** (`nostr://`, GRASP-first, no bridge to operate)—see the table below. You can still publish the **same NIP-34 events**; gitnostr is for hosts and clients that want **SSH/HTTPS bare git on infrastructure you control**.
-
 ## gitnostr vs **ngit**
 
 Both use **NIP-34** on relays; different **codebases** and default git workflow. Full forge comparison (gittr vs gitworkshop vs gitplaza): **[gittr README → Web client features](https://github.com/arbadacarbaYK/gittr#web-client-features-comparison)**.
@@ -44,14 +42,14 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 | Role | **Git server:** bridge watches relays → bare repos on disk → **SSH/HTTPS** | **CLI:** `ngit init`, `pr/` branches, **`nostr://`** via [git-remote-nostr](https://github.com/DanConwayDev/ngit-cli) |
 | Typical UI | **[gittr](https://gittr.space)** (issues, PRs, bounties, Pages, `/apps`, GitHub import) | **[gitworkshop](https://gitworkshop.dev)** (GRASP mirrors) |
 | Day-to-day git | **`git@host:<npub>/repo.git`** (bridge SSH) + optional **`nostr://`** if mirrored here | **`nostr://`** + ngit CLI (GRASP-first) |
-| Own bridge / paywall | **Yes** — `push_cost_sats`, NIP-34 **30617**, HTTP `/api/event`, watch-all mode | GRASP / ngit hosting — not this repo |
+| Own bridge / paywall | **Yes** — `push_cost_sats`, NIP-34 **30617**, HTTP `/api/event`, watch-all mode | GRASP / ngit hosting model |
 | Relay outage | **SQLite** permission cache on bridge | ngit/GRASP stack |
 
 **Same relays, different default transport:** [gittr](https://gittr.space) runs this bridge on **`git.gittr.space`**. You can use **SSH, HTTPS, or `nostr://`** against repos mirrored on that bridge; issues/PRs stay on Nostr either way.
 
 | Git access | **gitnostr bridge** (with or without gittr UI) | **ngit stack** |
 | --- | --- | --- |
-| **SSH** `git@host:npub/repo.git` | **Native** — `git-nostr-ssh` | Not this bridge (GRASP git hosts) |
+| **SSH** `git@host:npub/repo.git` | **`git-nostr-ssh`** on your bridge | GRASP git hosts |
 | **HTTPS** bare clone | **Yes** (when configured) | GRASP HTTPS URLs on events |
 | **`nostr://`** + git-remote-nostr | **Yes** when repo is on the bridge | **Native** to ngit |
 | Publish keys / repos | **`gn`**, kind **52** / **30617** events, or any UI | ngit CLI |
@@ -63,30 +61,21 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 
 - **[SSH & Git Access Guide](SSH_GIT_GUIDE.md)** - Complete guide for using SSH with git-nostr-bridge (cloning, pushing, pulling, permissions)
 - **[Bridge enhancements](docs/gittr-enhancements.md)** - HTTP API, watch-all, deduplication (gittr production)
-- **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Run without the gittr UI
+- **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Host the bridge on your own server
 - **[File fetch flow](docs/file-fetch-flow.md)** - How gittr + bridge serve repo trees
 - **[SSH & Git guide (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
 - **[CLI push example (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
 
 Repo config, SSH keys, and permissions live on **Nostr**; the bridge materializes **bare git** on disk so normal `git` clients keep working. If your host disappears, point a new bridge at the same relays and keys.
 
-**Full forge (not “repos only”):** with **[gittr](https://github.com/arbadacarbaYK/gittr)** you already get **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same NIP-34 relays—this repo is the **git server** (`git.gittr.space`), gittr is the **web UI and workflows**.
+**With [gittr](https://github.com/arbadacarbaYK/gittr):** **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same relays—this repo is **`git.gittr.space`**, gittr is the web forge.
 
 
 # How
 
-![Component diagram (original gitnostr design)](git-nostr.png)
+![Architecture overview](git-nostr.png)
 
-**Reading the diagram today**
-
-| Shown | Status |
-| --- | --- |
-| **git-nostr-bridge** ↔ **Relay** ↔ **git-nostr-cli** | **Yes** — core loop |
-| **git** ↔ **SSH** ↔ **git-nostr-ssh** ↔ **git-nostr-db** | **Yes** — production path |
-| **git-nostr-hook** | **Not built** — box is legacy; ignore it (see below) |
-| Issues / PRs / forge UI | **Not in this PNG** — implemented in **[gittr](https://github.com/arbadacarbaYK/gittr)**, not inside the bridge binary |
-
-Production bridge additions (HTTP `/api/event`, watch-all, dedupe): **[docs/gittr-enhancements.md](docs/gittr-enhancements.md)** · ![gittr bridge extensions](docs/gittr-enhancements.png)
+**git-nostr-cli** publishes repo, permission, and SSH-key events to **Relays**. **git-nostr-bridge** subscribes, updates **git-nostr-db**, mirrors **bare git** repos, and maintains SSH `authorized_keys`. Contributors use normal **git** over **SSH** (**git-nostr-ssh**). HTTP **`/api/event`**, watch-all mode, and deduplication: [docs/gittr-enhancements.md](docs/gittr-enhancements.md).
 
 ## git-nostr-db
 
@@ -107,10 +96,6 @@ Configured as the command for a nostr users ssh-key in the authorized_keys file.
 Whenever a user tries to perform a git operation (push/pull) git-nostr-ssh will perform an access control check.
 Repository owners are always treated as `ADMIN` for their own repositories, even if a cached permission row is missing/stale.
 If a repository has a configured push paywall (`push_cost_sats > 0`), SSH write operations (`git-receive-pack`) also require a non-expired paid authorization grant in bridge SQLite. If a pending invoice already exists for the payer identity, SSH can print `pending invoice (BOLT11): ...` directly. Each successful push consumes one paid authorization.
-
-### git-nostr-hook (not shipped)
-
-Idea from the early gitnostr design: a **server-side git hook** helper for branch rules (e.g. block force-push to `main`). **There is no `git-nostr-hook` in this repo** — not in the Makefile, not used on gittr.space. Use normal git `hooks/` on bare repos if you need that on your host.
 
 ### git-nostr-cli (gn)
 
@@ -169,19 +154,19 @@ Edit the config file at `~/.config/git-nostr/git-nostr-bridge.json`. The default
 }
 ```
 
-Add your relay of relays to the list of relays. **You should use a local relay for testing until the implementation is finalized.**
-Add your public key to the list of gitRepoOwners. **It is recommended to generate a new nostr private/public key pair for testing**
+Add your relays (public `wss://` URLs, same as gittr production).
+Add your public key to `gitRepoOwners`, or leave `gitRepoOwners` empty for watch-all mode.
 
 git-nostr-bridge will follow events published by gitRepoOwners and create git repositories for them.
 
-My local testing config looks like this
+Example (gittr-style relays):
 
 ```
 {
     "repositoryDir": "~/git-nostr-repositories",
     "DbFile": "~/.config/git-nostr/git-nostr-db.sqlite",
-    "relays": ["ws://localhost:8080"],
-    "gitRepoOwners": ["e0e7807d354ea7662412d99856335e1923b0b57b6668575bf320837f6b1816e3"]
+    "relays": ["wss://relay.damus.io", "wss://nos.lol"],
+    "gitRepoOwners": []
 }
 ```
 
@@ -225,17 +210,15 @@ Edit the config file at `~/.config/git-nostr/git-nostr-cli.json`. The default fi
 }
 ```
 
-Add your relay of relays to the list of relays. **You should use a local relay for testing until the implementation is finalized.**
-Set your private key. **It is recommended to generate a new nostr private/public key pair for testing**
-Set gitSshBase to the ssh user@hostname where a git-nostr-bridge has been installed.
+Set relays, your private key, and `gitSshBase` (`git@your-host` or `git-nostr@your-host`).
 
-My local testing config looks like this
+Example:
 
 ```
 {
-    "relays": ["ws://localhost:8080"],
+    "relays": ["wss://relay.damus.io", "wss://nos.lol"],
     "privateKey": "...",
-    "gitSshBase": "git-str@localhost"
+    "gitSshBase": "git@git.gittr.space"
 }
 ```
 
