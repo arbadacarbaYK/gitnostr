@@ -59,7 +59,8 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 
 ## Documentation
 
-- **[Architecture](docs/ARCHITECTURE.md)** — components, relays, disk, and how **gittr UI**, **`gn`**, **SSH git**, and **`git-remote-nostr`** connect
+- **[Architecture](docs/ARCHITECTURE.md)** — components, relays, disk, and how **gittr UI**, **`gn`**, **SSH git**, and **`git-remote-nostr`** connect (diagram has **no** `git-nostr-hook` — that was never shipped)
+- **NIPs / kinds:** [nostr schemata on gittr](https://gittr.space/npub1zafcms4xya5ap9zr7xxr0jlrtrattwlesytn2s42030lzu0dwlzqpd26k5/schemata?file=README.md) · [NIP-34](https://gittr.space/npub1zafcms4xya5ap9zr7xxr0jlrtrattwlesytn2s42030lzu0dwlzqpd26k5/schemata?file=README.md&path=nips%2Fnip-34)
 - **[SSH & Git Access Guide](SSH_GIT_GUIDE.md)** - Complete guide for using SSH with git-nostr-bridge (cloning, pushing, pulling, permissions)
 - **[Bridge enhancements](docs/gittr-enhancements.md)** - HTTP API, watch-all, deduplication (gittr production)
 - **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Host the bridge on your own server
