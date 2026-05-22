@@ -27,7 +27,7 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 | **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://gittr.space/arbadacarbaYK/gittr?branch=main)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
 | **Backup & mirror on your own metal** | Bare repos under `repositoryDir`. Point relays at your instance; use **watch-all** mode (`gitRepoOwners: []`) to mirror every repo you see, or limit to your pubkey(s). `clone` / `source` tags on events pull from GitHub, GitLab, Codeberg, GRASP HTTPS, etc. |
 | **Leave centralized git hosting** | Permissions and SSH keys are **Nostr events**; reinstall the bridge on a new VPS and reconnect—same as moving off a censored Git host, without changing day-to-day `git` habits. |
-| **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI, hooks, and IDEs. |
+| **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI and IDEs. |
 | **Public git mirror for the network** | Run a community bridge that mirrors NIP-34 announcements; others clone from your host while metadata stays on relays. |
 | **Monetize pushes** | Per-repo **`push_cost_sats`**: Lightning invoice + single-use push grant in SQLite (SSH prints BOLT11 when needed). |
 | **Shell-first operators** | Publish repos, keys, and ACL with **`git-nostr-cli` (`gn`)**; the bridge applies changes from relays (and optional HTTP). |
@@ -59,6 +59,7 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 
 ## Documentation
 
+- **[Architecture](docs/ARCHITECTURE.md)** — components, relays, disk, and how **gittr UI**, **`gn`**, **SSH git**, and **`git-remote-nostr`** connect
 - **[SSH & Git Access Guide](SSH_GIT_GUIDE.md)** - Complete guide for using SSH with git-nostr-bridge (cloning, pushing, pulling, permissions)
 - **[Bridge enhancements](docs/gittr-enhancements.md)** - HTTP API, watch-all, deduplication (gittr production)
 - **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Host the bridge on your own server
@@ -71,37 +72,24 @@ Repo config, SSH keys, and permissions live on **Nostr**; the bridge materialize
 **With [gittr](https://gittr.space/arbadacarbaYK/gittr?branch=main):** **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same relays—this repo is **`git.gittr.space`**, gittr is the web forge.
 
 
-# How
+# How it works
 
-![Architecture overview](git-nostr.png)
+![Infrastructure overview](git-nostr.png)  
+*Regenerate: `dot -Tpng architecture.dot -o git-nostr.png`*
 
-**git-nostr-cli** publishes repo, permission, and SSH-key events to **Relays**. **git-nostr-bridge** subscribes, updates **git-nostr-db**, mirrors **bare git** repos, and maintains SSH `authorized_keys`. Contributors use normal **git** over **SSH** (**git-nostr-ssh**). HTTP **`/api/event`**, watch-all mode, and deduplication: [docs/gittr-enhancements.md](docs/gittr-enhancements.md).
+Full breakdown (components + **gittr UI** / **`gn`** / **SSH git** / **`git-remote-nostr`**): **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
-## git-nostr-db
+| Piece | What it does |
+| --- | --- |
+| **Relays** | Repo announcements (**30617**), state (**30618**), SSH keys (**52**), permissions (**50**), legacy **51**. |
+| **`git-nostr-bridge`** | Subscribes (optional **`POST /api/event`**), updates **`git-nostr-db`**, mirrors **`repositoryDir`**, maintains **`authorized_keys`**. |
+| **`git-nostr-ssh`** | SSH git entry: ACL from SQLite; optional **`push_cost_sats`** paywall on push. |
+| **`gn` (`git-nostr-cli`)** | Publishes events to relays (no direct bridge socket). |
+| **gittr UI** | Forge on relays + reads the same bare repos for file/commits APIs; SSH keys via Settings or `gn`. |
 
-An sqlite DB is used to cache the latest version of the data needed to perform access control checks to avoid development downtime in case of a relay or the git-nostr-bridge being offline.
+**DO NOT RUN THE BRIDGE AS YOUR OWN USER — it manages a dedicated user’s `authorized_keys`.**
 
-### git-nostr-bridge
-
-Connects to a set of relays and:
-1. subscribes to the events needed to keep the git-nostr-db up to date
-2. creates git repositories as needed
-3. updates the ssh authorized_keys file
-
-**DO NOT RUN THE BRIDGE AS YOUR OWN USER YOU WILL LOSE YOUR AUTHORIZED_KEYS FILE**
-
-### git-nostr-ssh
-
-Configured as the command for a nostr users ssh-key in the authorized_keys file.
-Whenever a user tries to perform a git operation (push/pull) git-nostr-ssh will perform an access control check.
-Repository owners are always treated as `ADMIN` for their own repositories, even if a cached permission row is missing/stale.
-If a repository has a configured push paywall (`push_cost_sats > 0`), SSH write operations (`git-receive-pack`) also require a non-expired paid authorization grant in bridge SQLite. If a pending invoice already exists for the payer identity, SSH can print `pending invoice (BOLT11): ...` directly. Each successful push consumes one paid authorization.
-
-### git-nostr-cli (gn)
-
-Command line tool with similar options to the github cli that will publish the relevant events using your private key to the configured relays
-
-git-nostr-bridge will then react to these events and update the DB and create any git repos needed.
+Production bridge options (HTTP fast lane, watch-all, dedupe): [docs/gittr-enhancements.md](docs/gittr-enhancements.md).
 
 
 # Setup Instructions
