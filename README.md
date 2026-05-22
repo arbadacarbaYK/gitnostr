@@ -110,7 +110,7 @@ git-nostr-bridge will then react to these events and update the DB and create an
 
 - **Linux** — production bridges (including **gittr.space** / `git.gittr.space`) run on Linux with `git`, OpenSSH, and a dedicated `git-nostr` user.
 - **Go 1.20+** — see `go.mod` (gittr deploy docs often cite Go 1.21+ for the full stack).
-- **Relays** — use the same **public `wss://` relays** as your gittr UI (`NEXT_PUBLIC_NOSTR_RELAYS`), e.g. `wss://relay.damus.io`, `wss://nos.lol`. That is what **gittr production** is run against—not a mandatory local [nostr-rs-relay](https://github.com/scsibug/nostr-rs-relay). A local relay is only an optional sandbox; example configs below may show `ws://localhost:8080` from upstream tutorials.
+- **Relays** — public **`wss://`** URLs (e.g. `wss://relay.damus.io`, `wss://nos.lol`). Match gittr `NEXT_PUBLIC_NOSTR_RELAYS` or [STANDALONE_BRIDGE_SETUP.md](docs/STANDALONE_BRIDGE_SETUP.md).
 
 **gittr.space:** To install **only** the bridge, clone **`https://github.com/arbadacarbaYK/gitnostr`** (this repo). Inside the gittr monorepo, build from **`ui/gitnostr/`** — same project, kept in sync with GitHub.
 
