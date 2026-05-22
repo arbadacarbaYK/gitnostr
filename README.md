@@ -101,11 +101,9 @@ Whenever a user tries to perform a git operation (push/pull) git-nostr-ssh will 
 Repository owners are always treated as `ADMIN` for their own repositories, even if a cached permission row is missing/stale.
 If a repository has a configured push paywall (`push_cost_sats > 0`), SSH write operations (`git-receive-pack`) also require a non-expired paid authorization grant in bridge SQLite. If a pending invoice already exists for the payer identity, SSH can print `pending invoice (BOLT11): ...` directly. Each successful push consumes one paid authorization.
 
-### git-nostr-hook
+### git-nostr-hook (not shipped)
 
-TODO: not implemented yet.
-
-Will enable fine grain branch control e.g. prevent pushing to specific branches or force pushing to a branch.
+Idea from the early gitnostr design: a **server-side git hook** helper for branch rules (e.g. block force-push to `main`). **There is no `git-nostr-hook` in this repo** — not in the Makefile, not used on gittr.space. Use normal git `hooks/` on bare repos if you need that on your host.
 
 ### git-nostr-cli (gn)
 
@@ -116,9 +114,11 @@ git-nostr-bridge will then react to these events and update the DB and create an
 
 # Setup Instructions
 
-**Currently this project is Linux only**
-**Go version 1.20+ is required**
-**It is recommended to use a local private relay for testing. Testing was performed using https://github.com/scsibug/nostr-rs-relay**
+**Prerequisites**
+
+- **Linux** — production bridges (including **gittr.space** / `git.gittr.space`) run on Linux with `git`, OpenSSH, and a dedicated `git-nostr` user.
+- **Go 1.20+** — see `go.mod` (gittr deploy docs often cite Go 1.21+ for the full stack).
+- **Relays** — use the same **public `wss://` relays** as your gittr UI (`NEXT_PUBLIC_NOSTR_RELAYS`), e.g. `wss://relay.damus.io`, `wss://nos.lol`. That is what **gittr production** is run against—not a mandatory local [nostr-rs-relay](https://github.com/scsibug/nostr-rs-relay). A local relay is only an optional sandbox; example configs below may show `ws://localhost:8080` from upstream tutorials.
 
 **gittr.space:** To install **only** the bridge, clone **`https://github.com/arbadacarbaYK/gitnostr`** (this repo). Inside the gittr monorepo, build from **`ui/gitnostr/`** — same project, kept in sync with GitHub.
 
