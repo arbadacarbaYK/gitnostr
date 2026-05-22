@@ -9,9 +9,9 @@
 | What | How |
 | --- | --- |
 | **SSH git** | **`git-nostr-ssh`** on the host handles `git clone` / `push` / `pull` for any client (terminal, CI, IDE). The bridge updates `authorized_keys` from **Nostr kind 52** events. |
-| **SSH keys on relays** | Publish with **`gn ssh-key add`** ([`git-nostr-cli`](#git-nostr-cli-gn)), any tool that signs kind **52**, or optionally **gittr → Settings → SSH Keys** (same events the bridge already reads). |
+| **SSH keys on relays** | Publish with **`gn ssh-key add`** ([`git-nostr-cli`](#git-nostr-cli-gn)), any tool that signs kind **52**, or **gittr → Settings → SSH Keys** (same events the bridge already reads). |
 | **HTTPS git** | Same bare repos, e.g. `https://git.your-host/<pubkey>/<repo>.git` when nginx fronts the bridge (see gittr nginx examples). |
-| **`nostr://` remotes** | If the repo is **mirrored on your bridge**, install **[git-remote-nostr](https://github.com/DanConwayDev/ngit-cli)** and use `nostr://…` like any NIP-34 client—parallel to SSH, not instead of the bridge. gittr publishes `clone` tags for interop. |
+| **`nostr://` remotes** | If the repo is **mirrored on your bridge**, install **[git-remote-nostr](https://github.com/DanConwayDev/ngit-cli)** and use `nostr://…` alongside SSH/HTTPS. gittr publishes `clone` tags for interop. |
 
 **Operator flow:** run the bridge → users (or `gn`) publish repo + key + permission events → contributors `git clone git@your-host:npub/repo.git`. No website required.
 
@@ -24,7 +24,7 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 | Use case | Why gitnostr fits |
 | --- | --- |
 | **Backend for a web forge** | Pair the bridge with any NIP-34 UI. [gittr](https://github.com/arbadacarbaYK/gittr) is the reference: issues, PRs, import, Pages, bounties—all talking to this bridge on `git.gittr.space`. Self-host **gittr + gitnostr** for your community. |
-| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk repos**, optional HTTP **`/api/event`** (no relay lag for creates), and **tree/file HTTP APIs** for file browsers. See [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
+| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://github.com/arbadacarbaYK/gittr)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
 | **Backup & mirror on your own metal** | Bare repos under `repositoryDir`. Point relays at your instance; use **watch-all** mode (`gitRepoOwners: []`) to mirror every repo you see, or limit to your pubkey(s). `clone` / `source` tags on events pull from GitHub, GitLab, Codeberg, GRASP HTTPS, etc. |
 | **Leave centralized git hosting** | Permissions and SSH keys are **Nostr events**; reinstall the bridge on a new VPS and reconnect—same as moving off a censored Git host, without changing day-to-day `git` habits. |
 | **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI, hooks, and IDEs. |
@@ -155,9 +155,9 @@ Edit the config file at `~/.config/git-nostr/git-nostr-bridge.json`. The default
 ```
 
 Add your relays (public `wss://` URLs, same as gittr production).
-Add your public key to `gitRepoOwners`, or leave `gitRepoOwners` empty for watch-all mode.
 
-git-nostr-bridge will follow events published by gitRepoOwners and create git repositories for them.
+- **`gitRepoOwners` non-empty** — mirror only repos from those pubkeys.
+- **`gitRepoOwners` empty** — **watch-all**: mirror every repo announcement on your relays.
 
 Example (gittr-style relays):
 
