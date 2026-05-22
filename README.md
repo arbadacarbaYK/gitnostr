@@ -1,12 +1,28 @@
 # gitnostr
 
-**Git-on-Nostr bridge for [gittr](https://gittr.space)** — [`arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (this repo) and [`ui/gitnostr/`](https://github.com/arbadacarbaYK/gittr/tree/main/ui/gitnostr) in the gittr monorepo are the **same project**.
+**Git bridge to Nostr** — [`arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (this repo) and [`ui/gitnostr/`](https://github.com/arbadacarbaYK/gittr/tree/main/ui/gitnostr) in the gittr monorepo are the **same codebase**.
 
-**What this is (from the [gittr ecosystem table](https://github.com/arbadacarbaYK/gittr#nostr-git-ecosystem-how-gittr-fits)):** the **git server layer** — `git-nostr-bridge`, SSH/HTTPS bare repos, kind **52** SSH keys, optional **`push_cost_sats`** push paywall, **`git-nostr-cli`** (`gn`), SQLite ACL cache. **Not [ngit](https://ngit.dev)** (CLI + `nostr://` + gitworkshop).
+`git-nostr-bridge` watches Nostr for repo and SSH-key events, keeps **bare git repos on your disk**, and serves **`git push` / `git pull` over SSH or HTTPS**. Repo metadata lives on relays (NIP-34); the bridge is the **git server**. **[gittr.space](https://gittr.space)** is the main forge built on top; you can also run the bridge alone or behind your own UI.
 
-Integration of git and Nostr: repository management, SSH-key management, permission management — standard **`git push` / `git pull`** to your bridge (or **gittr.space**), with repo config on relays.
+## When gitnostr is the better fit
 
-## gitnostr vs **ngit** (same comparison as gittr README)
+Use **gitnostr** when you need a **real git server** driven by Nostr—not when you only want a desktop patch client or the **ngit** `nostr://` CLI workflow ([comparison below](#gitnostr-vs-ngit)).
+
+| Use case | Why gitnostr fits |
+| --- | --- |
+| **Backend for a web forge** | Pair the bridge with any NIP-34 UI. [gittr](https://github.com/arbadacarbaYK/gittr) is the reference: issues, PRs, import, Pages, bounties—all talking to this bridge on `git.gittr.space`. Self-host **gittr + gitnostr** for your community. |
+| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk repos**, optional HTTP **`/api/event`** (no relay lag for creates), and **tree/file HTTP APIs** for file browsers. See [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
+| **Backup & mirror on your own metal** | Bare repos under `repositoryDir`. Point relays at your instance; use **watch-all** mode (`gitRepoOwners: []`) to mirror every repo you see, or limit to your pubkey(s). `clone` / `source` tags on events pull from GitHub, GitLab, Codeberg, GRASP HTTPS, etc. |
+| **Leave centralized git hosting** | Permissions and SSH keys are **Nostr events**; reinstall the bridge on a new VPS and reconnect—same as moving off a censored Git host, without changing day-to-day `git` habits. |
+| **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI, hooks, and IDEs. |
+| **Public git mirror for the network** | Run a community bridge that mirrors NIP-34 announcements; others clone from your host while metadata stays on relays. |
+| **Monetize pushes** | Per-repo **`push_cost_sats`**: Lightning invoice + single-use push grant in SQLite (SSH prints BOLT11 when needed). |
+| **Shell-first operators** | Publish repos, keys, and ACL with **`git-nostr-cli` (`gn`)**; the bridge applies changes from relays (and optional HTTP). |
+| **Relay outages / flaky networks** | **SQLite** caches permissions and repo metadata so SSH ACL checks still work when relays are slow or down. |
+
+**Usually not the first choice if:** you only need **[ngit](https://ngit.dev)** + **[gitworkshop](https://gitworkshop.dev)** (`nostr://`, GRASP-first, no bridge to operate)—see the table below. You can still publish the **same NIP-34 events**; gitnostr is for hosts and clients that want **SSH/HTTPS bare git on infrastructure you control**.
+
+## gitnostr vs **ngit**
 
 Both use **NIP-34** on relays; different **codebases** and default git workflow. Full forge comparison (gittr vs gitworkshop vs gitplaza): **[gittr README → Web client features](https://github.com/arbadacarbaYK/gittr#web-client-features-comparison)**.
 
@@ -18,7 +34,7 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 | Own bridge / paywall | **Yes** — `push_cost_sats`, NIP-34 **30617**, HTTP `/api/event`, watch-all mode | GRASP / ngit hosting — not this repo |
 | Relay outage | **SQLite** permission cache on bridge | ngit/GRASP stack |
 
-**gittr ≠ ngit:** gittr runs **gitnostr** on `git.gittr.space`. Same signed events (30617/30618, issues, PRs) can interoperate; gittr’s default transport is **SSH to the bridge**, not the ngit CLI.
+**gittr and ngit share relays, not the same git transport:** gittr runs **gitnostr** on `git.gittr.space`. Issues/PRs and repo announcements can interoperate; day-to-day git on gittr uses **SSH to this bridge**.
 
 | Git access | **With gitnostr + gittr** | **ngit stack** |
 | --- | --- | --- |
