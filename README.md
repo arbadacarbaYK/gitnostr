@@ -1,6 +1,6 @@
 # gitnostr
 
-**Git bridge to Nostr** — [`arbadacarbaYK/gitnostr`](https://github.com/arbadacarbaYK/gitnostr) (this repo) and [`ui/gitnostr/`](https://github.com/arbadacarbaYK/gittr/tree/main/ui/gitnostr) in the gittr monorepo are the **same codebase**.
+**Git bridge to Nostr** — [`arbadacarbaYK/gitnostr`](https://gittr.space/arbadacarbaYK/gitnostr?branch=main) (this repo) and [`ui/gitnostr/`](https://gittr.space/arbadacarbaYK/gittr?file=ui/gitnostr/README.md&branch=main) in the gittr monorepo are the **same codebase**.
 
 `git-nostr-bridge` watches Nostr for repo and SSH-key events, keeps **bare git repos on your disk**, and serves **`git push` / `git pull` over SSH or HTTPS**. Repo metadata lives on relays (NIP-34); the bridge is the **git server**. Pair with **[gittr](https://gittr.space)** for the full forge (issues, PRs, commits, Pages, bounties) on the same relays.
 
@@ -23,8 +23,8 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 
 | Use case | Why gitnostr fits |
 | --- | --- |
-| **Backend for a web forge** | Pair the bridge with any NIP-34 UI. [gittr](https://github.com/arbadacarbaYK/gittr) is the reference: issues, PRs, import, Pages, bounties—all talking to this bridge on `git.gittr.space`. Self-host **gittr + gitnostr** for your community. |
-| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://github.com/arbadacarbaYK/gittr)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
+| **Backend for a web forge** | Pair the bridge with any NIP-34 UI. [gittr](https://gittr.space/arbadacarbaYK/gittr?branch=main) is the reference: issues, PRs, import, Pages, bounties—all talking to this bridge on `git.gittr.space`. Self-host **gittr + gitnostr** for your community. |
+| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://gittr.space/arbadacarbaYK/gittr?branch=main)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
 | **Backup & mirror on your own metal** | Bare repos under `repositoryDir`. Point relays at your instance; use **watch-all** mode (`gitRepoOwners: []`) to mirror every repo you see, or limit to your pubkey(s). `clone` / `source` tags on events pull from GitHub, GitLab, Codeberg, GRASP HTTPS, etc. |
 | **Leave centralized git hosting** | Permissions and SSH keys are **Nostr events**; reinstall the bridge on a new VPS and reconnect—same as moving off a censored Git host, without changing day-to-day `git` habits. |
 | **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI, hooks, and IDEs. |
@@ -35,7 +35,7 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 
 ## gitnostr vs **ngit**
 
-Both use **NIP-34** on relays; different **codebases** and default git workflow. Full forge comparison (gittr vs gitworkshop vs gitplaza): **[gittr README → Web client features](https://github.com/arbadacarbaYK/gittr#web-client-features-comparison)**.
+Both use **NIP-34** on relays; different **codebases** and default git workflow. Full forge comparison (gittr vs gitworkshop vs gitplaza): **[gittr README → Web client features](https://gittr.space/arbadacarbaYK/gittr?file=README.md&branch=main)**.
 
 | Layer | **gitnostr** (this repo) | **ngit** |
 | --- | --- | --- |
@@ -63,12 +63,12 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 - **[Bridge enhancements](docs/gittr-enhancements.md)** - HTTP API, watch-all, deduplication (gittr production)
 - **[Standalone bridge setup](docs/STANDALONE_BRIDGE_SETUP.md)** - Host the bridge on your own server
 - **[File fetch flow](docs/file-fetch-flow.md)** - How gittr + bridge serve repo trees
-- **[SSH & Git guide (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
-- **[CLI push example (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
+- **[SSH & Git guide (gittr)](https://gittr.space/arbadacarbaYK/gittr?file=docs/SSH_GIT_GUIDE.md&branch=main)** — user-facing workflows and examples
+- **[CLI push example (gittr)](https://gittr.space/arbadacarbaYK/gittr?file=docs/CLI_PUSH_EXAMPLE.md&branch=main)** — HTTP API examples for pushing repositories programmatically
 
 Repo config, SSH keys, and permissions live on **Nostr**; the bridge materializes **bare git** on disk so normal `git` clients keep working. If your host disappears, point a new bridge at the same relays and keys.
 
-**With [gittr](https://github.com/arbadacarbaYK/gittr):** **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same relays—this repo is **`git.gittr.space`**, gittr is the web forge.
+**With [gittr](https://gittr.space/arbadacarbaYK/gittr?branch=main):** **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same relays—this repo is **`git.gittr.space`**, gittr is the web forge.
 
 
 # How
@@ -112,7 +112,7 @@ git-nostr-bridge will then react to these events and update the DB and create an
 - **Go 1.20+** — see `go.mod` (gittr deploy docs often cite Go 1.21+ for the full stack).
 - **Relays** — public **`wss://`** URLs (e.g. `wss://relay.damus.io`, `wss://nos.lol`). Match gittr `NEXT_PUBLIC_NOSTR_RELAYS` or [STANDALONE_BRIDGE_SETUP.md](docs/STANDALONE_BRIDGE_SETUP.md).
 
-**gittr.space:** To install **only** the bridge, clone **`https://github.com/arbadacarbaYK/gitnostr`** (this repo). Inside the gittr monorepo, build from **`ui/gitnostr/`** — same project, kept in sync with GitHub.
+**gittr.space:** To install **only** the bridge, `git clone git@git.gittr.space:arbadacarbaYK/gitnostr.git` or browse [arbadacarbaYK/gitnostr](https://gittr.space/arbadacarbaYK/gitnostr?branch=main). Inside the gittr monorepo, build from **`ui/gitnostr/`** — same project, kept in sync with that repo on gittr.
 
 ## git-nostr-bridge
 
@@ -130,7 +130,7 @@ sudo su - git-nostr
 Clone **gitnostr** and build the bridge components
 
 ```bash
-git clone https://github.com/arbadacarbaYK/gitnostr.git
+git clone git@git.gittr.space:arbadacarbaYK/gitnostr.git
 cd gitnostr
 make git-nostr-bridge
 ```
@@ -187,7 +187,7 @@ Your git-nostr-bridge is now ready for use
 Clone **gitnostr** and build the cli components
 
 ```bash
-git clone https://github.com/arbadacarbaYK/gitnostr.git
+git clone git@git.gittr.space:arbadacarbaYK/gitnostr.git
 cd gitnostr
 make git-nostr-cli
 ```
