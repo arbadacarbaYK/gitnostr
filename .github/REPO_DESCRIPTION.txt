@@ -1,1 +1,1 @@
-Git bridge to Nostr, alternative to ngit for SSH git push/pull, NIP-34 30617, kind-52 SSH keys, Lightning push paywall, SQLite ACL. Backend of e.g. gittr.space
+Git bridge to Nostr, alternative to ngit for SSH git push/pull, repos, apps, nsite, zaps, bounties, kind-52 SSH keys, Lightning push paywall, SQLite ACL. Backend of e.g. gittr.space
