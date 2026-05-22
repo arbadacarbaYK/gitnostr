@@ -68,18 +68,25 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 - **[SSH & Git guide (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/SSH_GIT_GUIDE.md)** — user-facing workflows and examples
 - **[CLI push example (gittr)](https://github.com/arbadacarbaYK/gittr/blob/main/docs/CLI_PUSH_EXAMPLE.md)** — HTTP API examples for pushing repositories programmatically
 
-I chose to build on top of the existing git tooling to allow the client side dev tools to remain largely unchanged for daily work (standard git commands work including push and pull)
+Repo config, SSH keys, and permissions live on **Nostr**; the bridge materializes **bare git** on disk so normal `git` clients keep working. If your host disappears, point a new bridge at the same relays and keys.
 
-By storing the config on Nostr your repository configuration can be easily regenerated a new host if your current git provider decides to censor you.
-
-See a demo video here: https://www.youtube.com/watch?v=G-WzlC8XfW4
-
-There is much more to a decentralized github/gitlab experience than just a repository. It would also be advantageous to move pull requests and issues to the Nostr protocol. These should however be treated as separate projects that will hopefully be interopable with this project's approach to repository management.
+**Full forge (not “repos only”):** with **[gittr](https://github.com/arbadacarbaYK/gittr)** you already get **issues, pull requests, commits, zaps, bounties, Pages, and `/apps`** on the same NIP-34 relays—this repo is the **git server** (`git.gittr.space`), gittr is the **web UI and workflows**.
 
 
 # How
 
-![Architecture diagram](git-nostr.png)
+![Component diagram (original gitnostr design)](git-nostr.png)
+
+**Reading the diagram today**
+
+| Shown | Status |
+| --- | --- |
+| **git-nostr-bridge** ↔ **Relay** ↔ **git-nostr-cli** | **Yes** — core loop |
+| **git** ↔ **SSH** ↔ **git-nostr-ssh** ↔ **git-nostr-db** | **Yes** — production path |
+| **git-nostr-hook** | **Not built** — box is legacy; ignore it (see below) |
+| Issues / PRs / forge UI | **Not in this PNG** — implemented in **[gittr](https://github.com/arbadacarbaYK/gittr)**, not inside the bridge binary |
+
+Production bridge additions (HTTP `/api/event`, watch-all, dedupe): **[docs/gittr-enhancements.md](docs/gittr-enhancements.md)** · ![gittr bridge extensions](docs/gittr-enhancements.png)
 
 ## git-nostr-db
 
