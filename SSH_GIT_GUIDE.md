@@ -323,7 +323,7 @@ gittr does **not** use a shell password for Git over SSH. A password prompt almo
 - Check that your private key is in `~/.ssh/` with correct permissions (600)
 - Verify the bridge service has processed your key (may take a few seconds)
 - Force a single key to avoid auth spam:
-  - `GIT_SSH_COMMAND='ssh -o IdentitiesOnly=yes -i ~/.ssh/<your-key>' git ls-remote git-nostr@gittr.space:<owner>/<repo>.git`
+  - `GIT_SSH_COMMAND='ssh -o IdentitiesOnly=yes -i ~/.ssh/<your-key>' git ls-remote git-nostr@git.gittr.space:<owner>/<repo>.git`
 - If you see `Too many authentication failures`, your SSH agent likely offered too many keys. Use `IdentitiesOnly=yes` as shown above.
 - If your IP was previously blocked by fail2ban, retry after unban/ban expiry.
 
@@ -347,9 +347,9 @@ gittr does **not** use a shell password for Git over SSH. A password prompt almo
 - If you just created the repository, wait a moment for the bridge to process it
 
 ### "Network is unreachable" (port 22)
-- Verify SSH port 22 is accessible: `ssh -v git-nostr@gittr.space`
+- Verify SSH port 22 is accessible: `ssh -v git-nostr@git.gittr.space`
 - Check if your network/firewall blocks port 22
-- Try HTTPS clone instead: `git clone https://gittr.space/<owner-identifier>/<repo-name>.git`
+- Try HTTPS clone instead: `git clone https://git.gittr.space/<owner-identifier>/<repo-name>.git` (or your operator’s HTTPS git host)
 
 ## Security Notes
 
