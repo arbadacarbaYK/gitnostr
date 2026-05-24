@@ -24,6 +24,7 @@ With **[gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhft
 | **Normal git** | OpenSSH + `git` | `git@git.gittr.space:<npub>/repo.git` (or your host) → **`git-nostr-ssh`** → ACL check → `git` on bare repo. |
 | **`git-remote-nostr`** | [ngit-cli](https://github.com/DanConwayDev/ngit-cli) helper | `git clone nostr://<npub>/<repo>` when the repo is **mirrored on your bridge** (same bare repo as SSH). Interop transport, not a separate hook. |
 | **HTTPS git** | `git` + HTTPS remote | Clone/push against nginx-fronted bare repo (same disk as bridge). |
+| **AI agent (MCP)** | **[gittr-mcp](https://github.com/arbadacarbaYK/gittr-mcp)** in Cursor, Claude Desktop, etc. | Stdio MCP → signs Nostr (30617, issues, PRs, …) and calls gittr **Next.js bridge routes** (`POST /api/nostr/repo/push`, bounty APIs, …). Targets `BRIDGE_URL` (default `https://gittr.space`); self-host = same `repositoryDir` + gittr UI. Not a replacement for SSH git—complements the forge for automation. |
 
 **Publish path (all clients):** signed Nostr events → relays → bridge (and optionally **`POST /api/event`**) → SQLite + disk + `authorized_keys`.
 
@@ -69,3 +70,4 @@ HTTP **`/api/event`**, event deduplication, **watch-all** (`gitRepoOwners: []`):
 - [SSH_GIT_GUIDE.md](../SSH_GIT_GUIDE.md) — clone URLs, keys, workflows  
 - [file-fetch-flow.md](file-fetch-flow.md) — bridge disk + gittr file APIs  
 - [STANDALONE_BRIDGE_SETUP.md](STANDALONE_BRIDGE_SETUP.md) — self-host the bridge  
+- [gittr-mcp](https://github.com/arbadacarbaYK/gittr-mcp) — agent access (MCP tools, install, parity with gittr.space UI)  

@@ -12,8 +12,9 @@
 | **SSH keys on relays** | Publish with **`gn ssh-key add`** ([`git-nostr-cli`](#git-nostr-cli-gn)), any tool that signs kind **52**, or **gittr → Settings → SSH Keys** (same events the bridge already reads). |
 | **HTTPS git** | Same bare repos, e.g. `https://git.your-host/<pubkey>/<repo>.git` when nginx fronts the bridge (see gittr nginx examples). |
 | **`nostr://` remotes** | If the repo is **mirrored on your bridge**, install **[git-remote-nostr](https://github.com/DanConwayDev/ngit-cli)** and use `nostr://…` alongside SSH/HTTPS. gittr publishes `clone` tags for interop. |
+| **AI agents (MCP)** | **[gittr-mcp](https://github.com/arbadacarbaYK/gittr-mcp)** — [Model Context Protocol](https://modelcontextprotocol.io/) server for **Cursor**, **Claude Desktop**, VS Code Copilot, OpenClaw, etc. Signs Nostr events, calls the gittr **HTTP bridge** (`push`, issues, PRs, merge, bounties). Point `BRIDGE_URL` at [gittr.space](https://gittr.space) or your self-hosted gittr that uses this bridge. Install: [README](https://github.com/arbadacarbaYK/gittr-mcp#install-5-minutes). |
 
-**Operator flow:** run the bridge → users (or `gn`) publish repo + key + permission events → contributors `git clone git@your-host:npub/repo.git`. No website required.
+**Operator flow:** run the bridge → users (or `gn`) publish repo + key + permission events → contributors `git clone git@your-host:npub/repo.git`. No website required. **Agents** can use the website, **`gn`**, raw HTTP ([CLI push on gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/CLI_PUSH_EXAMPLE.md&branch=main)), or **gittr-mcp** in an MCP host.
 
 Full user guide: **[SSH_GIT_GUIDE.md](SSH_GIT_GUIDE.md)**.
 
@@ -24,7 +25,7 @@ Use **gitnostr** when you need a **real git server** driven by Nostr—not when 
 | Use case | Why gitnostr fits |
 | --- | --- |
 | **Backend for a web forge** | Pair the bridge with any NIP-34 UI. [gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?branch=main) is the reference: issues, PRs, import, Pages, bounties—all talking to this bridge on `git.gittr.space`. Self-host **gittr + gitnostr** for your community. |
-| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?branch=main)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). |
+| **Integrate into your own client** | Relays stay the source of truth for discovery; the bridge gives **on-disk bare repos**, optional HTTP **`/api/event`**, and SSH git. Co-host **[gittr](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?branch=main)** for file trees and forge APIs — [docs/file-fetch-flow.md](docs/file-fetch-flow.md). For **AI coding agents**, use **[gittr-mcp](https://github.com/arbadacarbaYK/gittr-mcp)** (stdio MCP; same bridge + relays as the web UI). |
 | **Backup & mirror on your own metal** | Bare repos under `repositoryDir`. Point relays at your instance; use **watch-all** mode (`gitRepoOwners: []`) to mirror every repo you see, or limit to your pubkey(s). `clone` / `source` tags on events pull from GitHub, GitLab, Codeberg, GRASP HTTPS, etc. |
 | **Leave centralized git hosting** | Permissions and SSH keys are **Nostr events**; reinstall the bridge on a new VPS and reconnect—same as moving off a censored Git host, without changing day-to-day `git` habits. |
 | **Teams that want normal git** | Contributors use **`git clone git@your-host:npub/repo.git`** (or `git-nostr@`). No **ngit** binary required; works with existing CI and IDEs. |
@@ -67,6 +68,7 @@ Both use **NIP-34** on relays; different **codebases** and default git workflow.
 - **[File fetch flow](docs/file-fetch-flow.md)** - How gittr + bridge serve repo trees
 - **[SSH & Git guide (gittr)](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/SSH_GIT_GUIDE.md&branch=main)** — user-facing workflows and examples
 - **[CLI push example (gittr)](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/CLI_PUSH_EXAMPLE.md&branch=main)** — HTTP API examples for pushing repositories programmatically
+- **[gittr-mcp](https://github.com/arbadacarbaYK/gittr-mcp)** — MCP server for Cursor / Claude / other hosts (push, issues, PRs, stars, watch lists, bounties on gittr + this bridge)
 
 Repo config, SSH keys, and permissions live on **Nostr**; the bridge materializes **bare git** on disk so normal `git` clients keep working. If your host disappears, point a new bridge at the same relays and keys.
 
