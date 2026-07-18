@@ -64,6 +64,11 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			}
 		}
 		// Also check for deleted/archived in tags (some implementations use this)
+		// and visibility tags (gittr extension: ["public-read","true|false"],
+		// ["public-write","true|false"]). Missing tags keep the NIP-34 defaults
+		// (public read, owner-only write) so older announcements stay public.
+		publicRead := true
+		publicWrite := false
 		for _, tag := range event.Tags {
 			if len(tag) >= 2 && tag[0] == "deleted" && tag[1] == "true" {
 				isDeleted = true
@@ -71,12 +76,18 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			if len(tag) >= 2 && tag[0] == "archived" && tag[1] == "true" {
 				isArchived = true
 			}
+			if len(tag) >= 2 && tag[0] == "public-read" && tag[1] == "false" {
+				publicRead = false
+			}
+			if len(tag) >= 2 && tag[0] == "public-write" && tag[1] == "true" {
+				publicWrite = true
+			}
 		}
 
-		// Set default values for NIP-34
+		// Set values for NIP-34 (visibility from tags, defaults above)
 		repo.RepositoryName = repoName
-		repo.PublicRead = true   // Default for NIP-34
-		repo.PublicWrite = false // Default for NIP-34
+		repo.PublicRead = publicRead
+		repo.PublicWrite = publicWrite
 		repo.Deleted = isDeleted
 		repo.Archived = isArchived
 	} else {
@@ -130,6 +141,37 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 
 	if affected == 1 {
 		log.Printf("✅ [Bridge] Repository updated: pubkey=%s repo=%s\n", event.PubKey, repoName)
+	}
+
+	// Sync NIP-34 maintainers into RepositoryPermission (Permission=WRITE) so
+	// SSH and web-API ACLs cover gittr contributors. gittr publishes no kind-50
+	// permission events — the 30617 announcement is the source of truth, so
+	// stale rows for this repo are replaced whenever a newer event arrives.
+	if event.Kind == protocol.KindRepositoryNIP34 {
+		var maintainers []string
+		for _, tag := range event.Tags {
+			if len(tag) >= 2 && (tag[0] == "maintainers" || tag[0] == "merge_maintainers") {
+				for _, v := range tag[1:] {
+					v = strings.ToLower(strings.TrimSpace(v))
+					if len(v) == 64 {
+						if _, err := hex.DecodeString(v); err == nil {
+							maintainers = append(maintainers, v)
+						}
+					}
+				}
+			}
+		}
+		if _, err := db.Exec("DELETE FROM RepositoryPermission WHERE OwnerPubKey=? AND RepositoryName=? AND UpdatedAt<?;", event.PubKey, repoName, updatedAt); err != nil {
+			log.Printf("⚠️ [Bridge] Failed to clear stale permissions for %s/%s: %v\n", event.PubKey, repoName, err)
+		}
+		for _, m := range maintainers {
+			if strings.EqualFold(m, event.PubKey) {
+				continue // owner has implicit ADMIN
+			}
+			if _, err := db.Exec("INSERT INTO RepositoryPermission (OwnerPubKey,RepositoryName,TargetPubKey,Permission,UpdatedAt) VALUES (?,?,?,?,?) ON CONFLICT DO UPDATE SET Permission=?,UpdatedAt=? WHERE UpdatedAt<?;", event.PubKey, repoName, m, "WRITE", updatedAt, "WRITE", updatedAt, updatedAt); err != nil {
+				log.Printf("⚠️ [Bridge] Failed to sync maintainer permission %s on %s/%s: %v\n", m, event.PubKey, repoName, err)
+			}
+		}
 	}
 
 	// Optional repo-level push cost policy from NIP-34 tags.
@@ -189,6 +231,7 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			err := cloneRepository(cloneUrl, repoPath)
 			if err == nil {
 				log.Printf("✅ [Bridge] Successfully cloned repository from source URL: %s\n", cloneUrl)
+				ensureUploadPackBrowserCaps(repoPath)
 				return nil
 			}
 			log.Printf("⚠️ [Bridge] Failed to clone from source URL, will try clone URLs: %v\n", err)
@@ -213,6 +256,7 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			err := cloneRepository(httpsUrl, repoPath)
 			if err == nil {
 				log.Printf("✅ [Bridge] Successfully cloned repository from clone URL: %s\n", httpsUrl)
+				ensureUploadPackBrowserCaps(repoPath)
 				return nil
 			}
 			log.Printf("⚠️ [Bridge] Failed to clone from clone URL, will create empty repo: %v\n", err)
@@ -227,6 +271,8 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		if err != nil {
 			return fmt.Errorf("git init --bare failed : %w", err)
 		}
+
+		ensureUploadPackBrowserCaps(repoPath)
 
 		// CRITICAL: Set HEAD to "main" branch so git clone works properly
 		// This ensures empty repos can be cloned and pushed to immediately
@@ -289,6 +335,15 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 }
 
 // Clone repository from URL to path
+// ensureUploadPackBrowserCaps advertises partial-clone filter + tip SHA wants.
+// gitworkshop's explorer requires the "filter" capability; without it info/refs
+// succeeds but tree fetch fails as "upload-pack failed".
+func ensureUploadPackBrowserCaps(repoPath string) {
+	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowFilter", "true").Run()
+	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowAnySHA1InWant", "true").Run()
+	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowReachableSHA1InWant", "true").Run()
+}
+
 func cloneRepository(cloneUrl, repoPath string) error {
 	// Normalize URL: convert git:// to https://, git@ to https://
 	normalizedUrl := cloneUrl
