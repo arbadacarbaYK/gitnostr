@@ -218,10 +218,31 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		return fmt.Errorf("git repository stat: %w", err)
 	}
 
+	// If repo already exists, ensure the source URL is registered as the "upstream" remote
+	// so the state event handler can fetch from it when commits are missing.
+	if repoExists && sourceUrl != "" && looksLikeExternalGitRemote(sourceUrl) {
+		upstreamCloneUrl := sourceUrl
+		if !strings.HasSuffix(upstreamCloneUrl, ".git") {
+			upstreamCloneUrl = upstreamCloneUrl + ".git"
+		}
+		// Set or update the upstream remote (non-fatal)
+		setCmd := exec.Command("git", "--git-dir", repoPath, "remote", "set-url", "upstream", upstreamCloneUrl)
+		if setCmd.Run() != nil {
+			addCmd := exec.Command("git", "--git-dir", repoPath, "remote", "add", "upstream", upstreamCloneUrl)
+			if err := addCmd.Run(); err != nil {
+				log.Printf("⚠️ [Bridge] Could not set upstream remote to %s: %v\n", upstreamCloneUrl, err)
+			} else {
+				log.Printf("🔗 [Bridge] Added upstream remote: %s\n", upstreamCloneUrl)
+			}
+		} else {
+			log.Printf("🔗 [Bridge] Updated upstream remote: %s\n", upstreamCloneUrl)
+		}
+	}
+
 	// If repo doesn't exist, try to clone from source URL or clone URLs
 	if !repoExists {
-		// Priority 1: Try to clone from source URL (GitHub/GitLab/Codeberg)
-		if sourceUrl != "" && (strings.Contains(sourceUrl, "github.com") || strings.Contains(sourceUrl, "gitlab.com") || strings.Contains(sourceUrl, "codeberg.org")) {
+		// Priority 1: external forge / self-hosted HTTPS or git@ (not GRASP /npub1 paths)
+		if sourceUrl != "" && looksLikeExternalGitRemote(sourceUrl) {
 			// Convert source URL to clone URL
 			cloneUrl := sourceUrl
 			if !strings.HasSuffix(cloneUrl, ".git") {
@@ -232,6 +253,7 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			if err == nil {
 				log.Printf("✅ [Bridge] Successfully cloned repository from source URL: %s\n", cloneUrl)
 				ensureUploadPackBrowserCaps(repoPath)
+				ensureRepoOwnedByGitNostr(repoPath)
 				return nil
 			}
 			log.Printf("⚠️ [Bridge] Failed to clone from source URL, will try clone URLs: %v\n", err)
@@ -257,6 +279,7 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 			if err == nil {
 				log.Printf("✅ [Bridge] Successfully cloned repository from clone URL: %s\n", httpsUrl)
 				ensureUploadPackBrowserCaps(repoPath)
+				ensureRepoOwnedByGitNostr(repoPath)
 				return nil
 			}
 			log.Printf("⚠️ [Bridge] Failed to clone from clone URL, will create empty repo: %v\n", err)
@@ -273,6 +296,7 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 		}
 
 		ensureUploadPackBrowserCaps(repoPath)
+		ensureRepoOwnedByGitNostr(repoPath)
 
 		// CRITICAL: Set HEAD to "main" branch so git clone works properly
 		// This ensures empty repos can be cloned and pushed to immediately
@@ -334,6 +358,36 @@ func handleRepositoryEvent(event nostr.Event, db *sql.DB, cfg bridge.Config) err
 	return nil
 }
 
+// looksLikeExternalGitRemote is true for public HTTPS/HTTP/git@ remotes the bridge
+// can git-clone as NIP-34 source (GitHub, GitLab, Codeberg, Gitea, self-hosted).
+// False for empty URLs and Nostr GRASP paths that already use /npub1…/repo.
+func looksLikeExternalGitRemote(sourceUrl string) bool {
+	u := strings.TrimSpace(sourceUrl)
+	if u == "" {
+		return false
+	}
+	lower := strings.ToLower(u)
+	if strings.Contains(lower, "/npub1") {
+		return false
+	}
+	if strings.HasPrefix(lower, "git@") {
+		parts := strings.SplitN(u, ":", 2)
+		return len(parts) == 2 && strings.Contains(parts[1], "/")
+	}
+	if strings.HasPrefix(lower, "https://") || strings.HasPrefix(lower, "http://") {
+		withoutScheme := lower
+		if strings.HasPrefix(withoutScheme, "https://") {
+			withoutScheme = withoutScheme[len("https://"):]
+		} else {
+			withoutScheme = withoutScheme[len("http://"):]
+		}
+		pathParts := strings.Split(withoutScheme, "/")
+		// host + at least owner + repo
+		return len(pathParts) >= 3 && pathParts[0] != "" && pathParts[1] != "" && pathParts[2] != ""
+	}
+	return false
+}
+
 // Clone repository from URL to path
 // ensureUploadPackBrowserCaps advertises partial-clone filter + tip SHA wants.
 // gitworkshop's explorer requires the "filter" capability; without it info/refs
@@ -342,6 +396,21 @@ func ensureUploadPackBrowserCaps(repoPath string) {
 	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowFilter", "true").Run()
 	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowAnySHA1InWant", "true").Run()
 	_ = exec.Command("git", "--git-dir", repoPath, "config", "uploadpack.allowReachableSHA1InWant", "true").Run()
+}
+
+func ensureRepoOwnedByGitNostr(repoPath string) {
+	// Bridge may run as root (systemd) while SSH git runs as git-nostr — root-owned
+	// bare repos cause "detected dubious ownership" / exit 128 for clones.
+	chownCmd := exec.Command("chown", "-R", "git-nostr:git-nostr", repoPath)
+	if out, err := chownCmd.CombinedOutput(); err != nil {
+		chownCmd2 := exec.Command("sudo", "chown", "-R", "git-nostr:git-nostr", repoPath)
+		if out2, err2 := chownCmd2.CombinedOutput(); err2 != nil {
+			log.Printf("⚠️  [Bridge] Failed to chown %s to git-nostr: %v / %v (%s %s)", repoPath, err, err2, string(out), string(out2))
+		}
+	}
+	parent := filepath.Dir(repoPath)
+	_ = exec.Command("chown", "git-nostr:git-nostr", parent).Run()
+	_ = os.Chmod(parent, 0750)
 }
 
 func cloneRepository(cloneUrl, repoPath string) error {
@@ -373,6 +442,7 @@ func cloneRepository(cloneUrl, repoPath string) error {
 		return fmt.Errorf("git clone failed: %w", err)
 	}
 
+	ensureRepoOwnedByGitNostr(repoPath)
 	return nil
 }
 
