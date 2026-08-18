@@ -81,7 +81,10 @@ SSH and `nostr://` both target the same NIP-34 repo on the bridge.
 The bridge needs a repo announcement (**kind 30617**, or legacy **51**) before SSH works:
 
 - **CLI:** `gn repo create <name>` (see [README — gn](README.md#git-nostr-cli-gn))
-- **gittr:** **Create repository** → empty repo → after `git push`, **Push to Nostr** on the repo page
+- **MCP:** gittr-mcp `createRepo` (HTTPS + local nsec — no SSH, no website)
+- **gittr website (optional):** **Create repository** → empty repo → after `git push`, **Push to Nostr**
+
+SSH itself never goes through the website. After a kind-52 key is registered (`gn ssh-key add`, any signer, or Settings → SSH Keys), `git clone`/`git push` are laptop → `git-nostr-ssh` → bare repo.
 
 ## Workflow 1: Create and Add Files via SSH
 
@@ -90,8 +93,7 @@ The bridge needs a repo announcement (**kind 30617**, or legacy **51**) before S
 Create a new repository and push your local files:
 
 ```bash
-# 1. Create the repository on gittr.space (via web UI)
-# Go to "Create repository" page, enter name, click "Create Empty Repository"
+# 1. Create the repo (website, `gn repo create`, or MCP createRepo)
 
 # 2. Clone the empty repository
 git clone git@git.gittr.space:<your-identifier>/<repo-name>.git
@@ -105,8 +107,7 @@ git add .
 git commit -m "Initial commit: Add files from local source"
 git push origin main
 
-# 5. Publish to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ### 1.2 From GitHub to Nostr Using Gittr
@@ -126,8 +127,7 @@ git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
 # 4. Push to gittr
 git push gittr main
 
-# 5. Publish to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ### 1.3 From a Git Server
@@ -147,8 +147,7 @@ git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
 # 4. Push to gittr
 git push gittr main
 
-# 5. Publish to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ### 1.4 From Codeberg
@@ -168,8 +167,7 @@ git remote add gittr git@git.gittr.space:<your-identifier>/<repo-name>.git
 # 4. Push to gittr
 git push gittr main
 
-# 5. Publish to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ## Workflow 2: Delete or Add Files in Existing Repos via SSH
@@ -220,8 +218,7 @@ git merge github/main --allow-unrelated-histories
 # 4. Push to gittr
 git push origin main
 
-# 5. Publish updated state to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish updated state to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ### 2.3 From a Git Server
@@ -243,8 +240,7 @@ git merge source/main --allow-unrelated-histories
 # 4. Push to gittr
 git push origin main
 
-# 5. Publish updated state to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish updated state to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ### 2.4 From Codeberg
@@ -266,8 +262,7 @@ git merge codeberg/main --allow-unrelated-histories
 # 4. Push to gittr
 git push origin main
 
-# 5. Publish updated state to Nostr (via web UI)
-# Go to the repository page and click "Push to Nostr"
+# 5. Publish updated state to Nostr (website Push to Nostr, MCP, or gn)
 ```
 
 ## Publishing to Nostr (NIP-34 Events)
@@ -380,6 +375,6 @@ gittr does **not** use a shell password for Git over SSH. A password prompt almo
 
 ## See Also
 
-- **[SSH & Git guide (gittr docs)](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/SSH_GIT_GUIDE.md&branch=main)** — user-facing guide with web UI workflows (same content on gittr)
+- **[SSH & Git guide (gittr docs)](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/SSH_GIT_GUIDE.md&branch=main)** — laptop SSH, website (optional), and MCP HTTPS are three doors into the same host
 - [git-nostr-bridge README](README.md) - Setup and configuration instructions
 - [git-nostr-cli Usage](README.md#git-nostr-cli-gn) - Command-line tool documentation
