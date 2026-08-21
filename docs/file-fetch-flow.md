@@ -37,7 +37,7 @@ Implementation: `ui/src/lib/utils/git-source-fetcher.ts`, `ui/src/components/rep
 
 ## 4. Bridge production features
 
-HTTP **`/api/event`**, deduplication, watch-all (`gitRepoOwners: []`): [gittr-enhancements.md](gittr-enhancements.md).
+HTTP **`/api/event`**, deduplication, watch-all (`gitRepoOwners: []`), retention (bare only if this host is in `clone[]`): [gittr-enhancements.md](gittr-enhancements.md). gittr’s Next.js **`/api/nostr/repo/clone`** blocks permanently mirroring **other** GRASP hosts onto this bridge.
 
 ## 5. Other Nostr git clients
 
