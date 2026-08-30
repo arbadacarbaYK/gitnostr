@@ -57,7 +57,7 @@ flowchart LR
 
 Deeper internals: [Architecture](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=docs/ARCHITECTURE.md&branch=main) (more detailed than this map).
 
-**Where Code-tab files come from** (the race of `clone[]` / `source`, not this bridge alone): [file-fetch.gif](docs/file-fetch.gif) · [file-fetch.netdraw.json](docs/file-fetch.netdraw.json) in [NetDraw](https://mr-r3b00t.github.io/net_draw/) · [file-fetch-flow.md](docs/file-fetch-flow.md).
+**Where the Code tab gets files:** gittr [FILE_FETCHING_INSIGHTS.md](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/FILE_FETCHING_INSIGHTS.md&branch=main) (map + fetch timeline). This repo’s piece is the **on-disk mirror**: [file-fetch-flow.md](docs/file-fetch-flow.md).
 
 **Docs on gittr:** [Architecture](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=docs/ARCHITECTURE.md&branch=main) · [README](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?branch=main) · [SSH guide](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=SSH_GIT_GUIDE.md&branch=main)
 
