@@ -98,3 +98,5 @@ Deeper internals: [Architecture](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35
 make git-nostr-bridge git-nostr-ssh
 make git-nostr-cli   # gn
 ```
+
+Go module security pins (gorilla/websocket **v1.5.3+**, `golang.org/x/mod` **v0.40.0+**) must match gittr `ui/gitnostr/go.mod`. The two trees are not auto-synced. Details: [GO_MODULE_EXPLANATION.md](https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs/GO_MODULE_EXPLANATION.md&branch=main).
