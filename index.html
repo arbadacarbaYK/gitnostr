@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>gitnostr — git disk for gittr</title>
+    <meta
+      name="description"
+      content="gitnostr is the git server for gittr: bare repos on disk, SSH and HTTPS, kind 52 keys. Host git.gittr.space."
+    />
+    <link rel="stylesheet" href="./docs-site/hub.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2314b8a6'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-size='16'%3E★%3C/text%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <a class="skip" href="#jobs">Skip to what this box does</a>
+    <header class="topbar">
+      <div class="wrap topbar-inner">
+        <a class="brand" href="#top">
+          <span class="logo" aria-hidden="true">★</span>
+          gitnostr
+        </a>
+        <nav class="topnav" aria-label="On this page">
+          <a href="#jobs">What this is</a>
+          <a href="#map">Platform map</a>
+          <a href="#docs">Docs</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <div class="wrap hero">
+        <div class="hero-copy">
+          <p class="kicker">Nostr Page · the git disk</p>
+          <p class="stamp">We write code</p>
+          <h1 class="glitch" data-text="The git disk. Not the website.">
+            The git disk. <em>Not the website.</em>
+          </h1>
+          <p class="lede">
+            This repo is the <strong>gitnostr bridge</strong>: bare repos on
+            disk, clone over SSH or HTTPS, SSH keys from Nostr kind
+            <code>52</code>. Live host
+            <code>git.gittr.space</code>. The website is
+            <a href="https://gittr.space" target="_blank" rel="noopener noreferrer">gittr.space</a>.
+            This is not ngit, and it is not the public GRASP host gitnostr.com.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#jobs">What this box does</a>
+            <a
+              class="btn btn-ghost"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+              >Open on gittr</a
+            >
+            <a
+              class="btn btn-ghost"
+              href="https://3un05jr4dnwh6njreq6uhzgv67st83jxi5lnpsbf8y3dkdq1qkgittr-docu.pages.gittr.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >gittr docs hub</a
+            >
+          </div>
+          <div class="kinds-row" aria-hidden="true">
+            <span class="kind k30617">30617 announce</span>
+            <span class="kind k30618">30618 state</span>
+            <span class="kind">52 SSH keys</span>
+          </div>
+        </div>
+        <div class="hero-visual">
+          <span class="slash a" aria-hidden="true"></span>
+          <span class="slash b" aria-hidden="true"></span>
+          <figure class="polaroid">
+            <img
+              src="./docs/platform-map.svg"
+              alt="Platform map with gitnostr Bridge at git.gittr.space marked you are here"
+            />
+            <figcaption>you are here · git.gittr.space</figcaption>
+          </figure>
+          <svg class="burst" viewBox="0 0 120 120" aria-hidden="true">
+            <polygon
+              fill="#b8ff3c"
+              points="60,4 74,46 118,46 82,72 96,114 60,88 24,114 38,72 2,46 46,46"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <section id="jobs">
+        <div class="wrap">
+          <div class="section-title">
+            <h2>What this box does</h2>
+          </div>
+          <div class="tiles">
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=SSH_GIT_GUIDE.md&amp;branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Clone and push git</div>
+              <div class="job">
+                Real git over SSH/HTTPS. Bare repos on this host. Laptop
+                <code>git</code> talks here, not to the website.
+              </div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?file=docs%2FSSH_GIT_GUIDE.md&amp;branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Kind 52 keys</div>
+              <div class="job">
+                Nostr SSH keys become authorized_keys. Hex on disk, npub in
+                clone URLs.
+              </div>
+            </a>
+            <a
+              class="tile here"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Not ngit · not gitnostr.com</div>
+              <div class="job">
+                Same NIP-34 events, different software. ngit is a laptop helper.
+                gitnostr.com is a GRASP host on that stack.
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="map">
+        <div class="wrap">
+          <div class="section-title">
+            <h2>Click a box. Land on the repo or the host.</h2>
+          </div>
+          <p class="hint">
+            Teal outline = this repo (the git disk). Cyan = a hostname. Sister
+            Pages exist for the website hub and the cookbook — other boxes get
+            their own Page after Push Manifest.
+          </p>
+          <div class="tiles">
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">gittr Client</div>
+              <div class="host">gittr.space</div>
+              <div class="job">The website. Issues, PRs, Push, Pages, Apps.</div>
+            </a>
+            <a
+              class="tile here"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">gitnostr Bridge ★</div>
+              <div class="host">git.gittr.space · YOU ARE HERE</div>
+              <div class="job">Bare repos. SSH / HTTPS. Kind 52 keys.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gittr-mcp?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">gittr-mcp</div>
+              <div class="host">agents, not SSH</div>
+              <div class="job">Same forge for Cursor / Claude over HTTP.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/pyramid?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Pyramid relay</div>
+              <div class="host">relay.gittr.space</div>
+              <div class="job">wss events. Not the git disk.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/nsite-gateway?branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Pages / nsite</div>
+              <div class="host">pages.gittr.space</div>
+              <div class="job">Static sites from Blossom. Not git objects.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://3un05jr4dnwh6njreq6uhzgv67st83jxi5lnpsbf8y3dkdq1qkgittr-docu.pages.gittr.space/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">gittr docs hub</div>
+              <div class="host">Nostr Page · gittr-docu</div>
+              <div class="job">The public map of every box.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="docs">
+        <div class="wrap">
+          <div class="section-title">
+            <h2>Docs on gittr</h2>
+          </div>
+          <div class="tiles">
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=README.md&amp;branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">README</div>
+              <div class="job">What this bridge is, vs ngit.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=docs%2FARCHITECTURE.md&amp;branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">Architecture</div>
+              <div class="job">How the daemon, SSH, and DB fit.</div>
+            </a>
+            <a
+              class="tile"
+              href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=SSH_GIT_GUIDE.md&amp;branch=main"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <div class="name">SSH guide</div>
+              <div class="job">Clone URLs, keys, npub vs hex.</div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <p>
+          After you edit this repo: <strong>Push to Nostr</strong>, then
+          <strong>Nostr Pages → Push Manifest</strong>. Save site name
+          <code>gitnostr</code> (fits the 13-character DNS cap). Sister hub:
+          <a
+            href="https://3un05jr4dnwh6njreq6uhzgv67st83jxi5lnpsbf8y3dkdq1qkgittr-docu.pages.gittr.space/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >gittr-docu</a
+          >.
+        </p>
+      </div>
+    </footer>
+    <script src="./docs-site/hub.js"></script>
+  </body>
+</html>
