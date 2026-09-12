@@ -24,6 +24,7 @@
         </a>
         <nav class="topnav" aria-label="On this page">
           <a href="#jobs">What this is</a>
+          <a href="#fit">vs ngit</a>
           <a href="#map">Platform map</a>
           <a href="#docs">Docs</a>
         </nav>
@@ -45,6 +46,9 @@
             <code>git.gittr.space</code>. The website is
             <a href="https://gittr.space" target="_blank" rel="noopener noreferrer">gittr.space</a>.
             This is not ngit, and it is not the public GRASP host gitnostr.com.
+            The
+            <a href="#fit">compare</a>
+            is the README table, short.
           </p>
           <div class="cta-row">
             <a class="btn btn-primary" href="#jobs">What this box does</a>
@@ -131,6 +135,52 @@
               </div>
             </a>
           </div>
+        </div>
+      </section>
+
+      <section id="fit">
+        <div class="wrap">
+          <div class="section-title">
+            <h2>gitnostr vs ngit</h2>
+          </div>
+          <p class="hint">
+            Same NIP-34 language on relays. Not the same software. Day-to-day on
+            gittr.space: <strong>SSH/HTTPS to this bridge</strong>, not the ngit
+            binary.
+          </p>
+          <div class="compare">
+            <article class="col here">
+              <h3>This box · gitnostr</h3>
+              <ul>
+                <li>A <strong>git server</strong> you run: bare repos on disk.</li>
+                <li>Clone over <strong>SSH and HTTPS</strong> (<code>git@git.gittr.space:&lt;npub&gt;/repo.git</code>).</li>
+                <li>Kind <strong>52</strong> keys become <code>authorized_keys</code>.</li>
+                <li>Watches relays and creates/deletes mirrors. Optional Lightning paywall on push.</li>
+                <li>Pairs with <a href="https://gittr.space" target="_blank" rel="noopener noreferrer">gittr.space</a>.</li>
+              </ul>
+            </article>
+            <article class="col">
+              <h3>ngit + git-remote-nostr</h3>
+              <ul>
+                <li>A <strong>laptop CLI</strong>, not a server.</li>
+                <li><code>git clone nostr://&lt;npub&gt;/&lt;repo&gt;</code> — bytes live on GRASP hosts.</li>
+                <li>No kind 52. No SSH. No paywall on this bridge.</li>
+                <li>Running a GRASP host yourself is <strong>ngit-grasp</strong> (Rust), not this Go repo.</li>
+                <li>Pairs with <a href="https://gitworkshop.dev" target="_blank" rel="noopener noreferrer">gitworkshop.dev</a>.</li>
+              </ul>
+            </article>
+          </div>
+          <p class="hint" style="margin-top: 1.1rem">
+            <strong>Name trap:</strong>
+            <a href="https://gitnostr.com" target="_blank" rel="noopener noreferrer">gitnostr.com</a>
+            is a public GRASP host on the ngit stack. It is not this repository.
+            Web-forge extras (import, Pages, bounties, /apps) live in
+            <strong>gittr</strong>, not here.
+            Full table:
+            <a href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=README.md&amp;branch=main" target="_blank" rel="noopener noreferrer">README · gitnostr vs ngit</a>
+            ·
+            <a href="https://gittr.space/npub1n2ph08n4pqz4d3jk6n2p35p2f4ldhc5g5tu7dhftfpueajf4rpxqfjhzmc/gitnostr?file=docs%2FARCHITECTURE.md&amp;branch=main" target="_blank" rel="noopener noreferrer">Architecture</a>.
+          </p>
         </div>
       </section>
 
